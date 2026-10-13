@@ -1,0 +1,49 @@
+/* White canvas and individually colored cards, inspired by the supplied reference. */
+:root{--bg:#fff;--panel:#fff;--ink:#102a50;--muted:#536b91;--line:#e2e8f0}
+body,body.dark{background:#fff;color:#102a50;--bg:#fff;--surface:#fff;--panel:#fff;--ink:#102a50;--muted:#536b91;--line:#e2e8f0;--blue:#075be6;--soft:#eef5ff;color-scheme:light}
+header,body.dark header{background:#fff;border-bottom:1px solid #edf0f5;box-shadow:none}
+.hero,body.dark .hero{background:#fff;border:0;border-bottom:1px solid #edf0f5;border-radius:0;box-shadow:none;height:auto;max-height:20dvh}
+.hero-copy{padding:18px 8px}.hero h1{font-size:clamp(21px,2.1vw,30px)}
+.panel,body.dark .panel{background:#fff!important;border:0;border-radius:0;box-shadow:none;padding:14px 8px}
+main{max-width:1800px;padding:12px 24px}
+.section-head{margin-left:0;margin-right:0}.result-count{margin-bottom:16px}
+.grid{grid-template-columns:1fr;gap:16px}
+.card{--tone:#1462ce;--tint:#f5faff;--tile:#dcebff;--edge:#b7d5ff;position:relative;display:grid;grid-template-columns:112px minmax(0,1fr);align-content:center;align-items:center;column-gap:18px;row-gap:8px;min-height:208px;padding:20px 18px;border:1px solid var(--edge);border-radius:18px;background:var(--tint)!important;box-shadow:none;overflow:hidden;transition:border-color .2s,box-shadow .2s}
+.palette-1{--tone:#a45907;--tint:#fffbf2;--tile:#ffedbd;--edge:#f5d488}
+.palette-2{--tone:#087957;--tint:#f1fdf8;--tile:#ccf5e4;--edge:#9ee6cb}
+.palette-3{--tone:#d04c21;--tint:#fff8f4;--tile:#ffe0d2;--edge:#ffc6ae}
+.palette-4{--tone:#7541c7;--tint:#faf6ff;--tile:#eadbff;--edge:#dbc4ff}
+.palette-5{--tone:#bb2858;--tint:#fff6f8;--tile:#ffdce7;--edge:#ffbdcf}
+.palette-6{--tone:#075e9f;--tint:#f2faff;--tile:#d4edff;--edge:#a5d7f7}
+.palette-7{--tone:#087d83;--tint:#f0fdfd;--tile:#c8f3f0;--edge:#98e5df}
+.card:hover{transform:none;border-color:var(--tone);box-shadow:0 8px 24px #1836550c}
+.icon-tile{grid-column:1;grid-row:1/3;width:112px;height:142px;background:var(--tile);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;gap:0}
+.subject-art{display:block;width:86px;height:78px;object-fit:contain;filter:drop-shadow(0 5px 4px #0c28441a)}
+.icon-tile .science-icon.card-img{width:100px;height:58px;max-width:100%;padding:0;margin:0;background:none;border:0;border-radius:0;box-shadow:none;color:var(--tone);--glow:var(--tone);--accent:var(--tone);--diagram-fill:var(--tile);--diagram-grid:var(--edge)}
+.diagram-label{display:none}.diagram-line{opacity:.7;stroke-width:1.8}.signal{stroke-width:3.5;filter:drop-shadow(0 0 1px var(--tone))}
+.card .card-copy{grid-column:2;grid-row:1;align-self:end;padding:0 30px 0 0}
+.card h3{font-size:17px;font-weight:700;line-height:1.3;min-height:0;margin:0 0 7px;overflow-wrap:anywhere;color:#102a50}
+.card .category{display:inline-block;font-size:11px;line-height:1.2;font-weight:600;background:var(--tile);color:var(--tone);border:1px solid var(--edge);border-radius:20px;padding:3px 9px}
+.card p{font-size:13px;line-height:1.45;color:#536b91;min-height:0;margin:8px 0}
+.card .destination{display:flex;flex-wrap:wrap;gap:5px;margin:0;font-size:10px;line-height:1.3;color:var(--tone)}
+.destination>span{background:var(--tile);border:1px solid var(--edge);border-radius:20px;padding:3px 7px}
+.card .destination .shared{font-weight:normal;width:auto;display:inline-block}
+.card-launch{position:absolute;right:12px;top:16px;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;background:var(--tile);color:var(--tone);font-size:30px;font-weight:500;line-height:1;border:1px solid transparent}
+.card-launch:hover{background:var(--tone);color:white}
+.card .card-actions{grid-column:2;grid-row:2;justify-content:flex-start;align-self:start;display:flex;gap:5px;padding:0;margin:0;border:0;background:none}
+.card .card-actions button,.card .card-actions .favorite{display:grid;place-items:center;width:32px;height:32px;min-width:32px;min-height:32px;font-size:16px;color:var(--tone);border-radius:8px;background:transparent;grid-column:auto;grid-row:auto}
+.card .card-actions button:hover,.card .card-actions button[aria-pressed=true]{background:var(--tile)}
+.filters button.selected,body.dark .filters button.selected{background:#102a50;border-color:#102a50}
+.filters button[data-filter=Science]{color:#087957}.filters button[data-filter=Computing]{color:#7541c7}.filters button[data-filter=Engineering]{color:#d04c21}.filters button[data-filter=Labs]{color:#087d83}
+.filters button.selected{color:#fff!important}
+.primary{background:#2563eb;border-color:#2563eb;box-shadow:none}.primary:hover{background:#1d4ed8;border-color:#1d4ed8}
+.featured{background:#f1fdf8;border:1px solid #9ee6cb;box-shadow:none}.featured .primary{background:#087957;border-color:#087957}
+.tool-links a{background:#f5faff;border-color:#b7d5ff}.tool-links a:nth-child(2){background:#faf6ff;border-color:#dbc4ff}.tool-links a:nth-child(3){background:#fff8f4;border-color:#ffc6ae}
+.app-card{border-color:#b7d5ff;background:#f5faff}.app-card:nth-child(2){background:#fffbf2;border-color:#f5d488}.app-card:nth-child(3){background:#f1fdf8;border-color:#9ee6cb}.app-card:nth-child(4){background:#fff6f8;border-color:#ffbdcf}
+.app-card:nth-child(2) .primary{background:#a45907;border-color:#a45907}.app-card:nth-child(3) .primary{background:#087957;border-color:#087957}.app-card:nth-child(4) .primary{background:#bb2858;border-color:#bb2858}
+@media(min-width:700px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1200px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1700px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:767px){main{padding:8px 12px}.hero-copy{padding:12px 0;gap:10px}.hero h1{font-size:22px}.panel{padding:12px 0}.card{grid-template-columns:98px minmax(0,1fr);column-gap:14px;padding:16px 14px;min-height:202px}.icon-tile{width:98px;height:136px}.card h3{font-size:16px}.card .card-copy{padding-right:24px}.card p{font-size:12px}.card-launch{right:10px;top:12px;width:34px;height:34px}.card .card-actions button{min-height:36px;height:36px;width:36px}.filters{display:flex;flex-wrap:wrap}.filters button:first-child{grid-column:auto}.filters button{flex:1 1 auto}.bottom-nav{background:#fff}}
+@media(min-width:700px) and (max-width:900px){.card{grid-template-columns:84px minmax(0,1fr);column-gap:12px;padding:14px}.icon-tile{width:84px}.subject-art{width:76px}.card h3{font-size:15px}}
+
