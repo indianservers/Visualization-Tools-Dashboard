@@ -21,12 +21,6 @@ header{padding-top:6px;padding-bottom:6px}
 .card-actions button{color:var(--muted);background:var(--soft);border-radius:8px}
 .card-actions button:hover{color:var(--ink);background:var(--line)}
 body.dark .primary,body.dark .card-actions a{background:#0f766e;color:#fff;border-color:#2dd4bf}
-.card-img,.app-card img,.featured img{animation:icon-float 4s ease-in-out infinite;transform-origin:center;will-change:transform}
-.card:nth-child(3n+2) .card-img{animation-delay:-1.3s}
-.card:nth-child(3n) .card-img{animation-delay:-2.6s}
-.card:hover .card-img,.card:focus-within .card-img{animation:icon-play .7s ease-in-out infinite alternate}
-@keyframes icon-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-@keyframes icon-play{from{transform:translateY(-3px) rotate(-3deg) scale(1.02)}to{transform:translateY(-7px) rotate(3deg) scale(1.06)}}
 @media(min-width:1101px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:767px){
 .hero{max-height:150px}
@@ -39,4 +33,3 @@ body.dark .primary,body.dark .card-actions a{background:#0f766e;color:#fff;borde
 .filters button{padding:8px;font-size:12px}
 }
 @media(max-height:600px){.hero h1 br{display:none}.hero h1{font-size:18px}.hero-copy{gap:5px;padding:6px 12px}.actions a{min-height:32px;padding:5px 10px}}
-@media(prefers-reduced-motion:reduce){.card-img,.app-card img,.featured img,.card:hover .card-img,.card:focus-within .card-img{animation:none;will-change:auto}}

@@ -1,0 +1,33 @@
+.science-icon.card-img{width:130px;max-width:88%;height:82px;background:radial-gradient(ellipse at center,#153449,#071726 80%);border:1px solid #285469;border-radius:12px;padding:5px;box-shadow:inset 0 0 16px #00c7e60c;overflow:hidden;color:#67e8f9;--glow:#00e5ff;--accent:#c4b5fd;--diagram-fill:#122f42;--diagram-grid:#508099;contain:layout style}
+.card-computing .science-icon{color:#c4b5fd;--glow:#c4a4ff;--accent:#22d3ee;--diagram-fill:#292143}
+.card-engineering .science-icon{color:#fcd34d;--glow:#fbbf24;--accent:#2dd4bf;--diagram-fill:#3c2d19}
+.card-labs .science-icon{color:#5eead4;--glow:#2dd4bf;--accent:#c4b5fd;--diagram-fill:#103932}
+.dark .science-icon{color:#5ee0ee;--diagram-fill:#122f42;--diagram-grid:#264458}
+.dark .card-computing .science-icon{color:#c4a4ff;--diagram-fill:#292143}
+.dark .card-engineering .science-icon{color:#facc75;--diagram-fill:#3c2d19}
+.dark .card-labs .science-icon{color:#5eead4;--diagram-fill:#103932}
+.diagram-grid{fill:none;stroke:var(--diagram-grid);stroke-width:.5;opacity:.3}
+.diagram-line{fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;opacity:.65}
+.axis{opacity:.25;stroke-width:1}
+.signal{fill:none;stroke:var(--glow);stroke-width:3;stroke-linecap:round;stroke-dasharray:.025 .975;filter:drop-shadow(0 0 2px var(--glow));animation:signal-flow 2.8s linear infinite;animation-delay:calc(var(--delay,0s) + var(--phase,0s))}
+.data-node{fill:var(--diagram-fill);stroke:currentColor;stroke-width:1.5;animation:node-activate 2.8s ease-in-out infinite;animation-delay:calc(var(--delay,0s) + var(--phase,0s))}
+.chip-body,.database-shell,.vision-object{fill:var(--diagram-fill);stroke:currentColor;stroke-width:1.5}
+.chip-label{fill:currentColor;font:600 13px monospace}
+.diagram-label{fill:currentColor;font:5.5px monospace;letter-spacing:1.1px;opacity:.8}
+.live-bar{fill:currentColor;transform-box:fill-box;transform-origin:center bottom;animation:bar-update var(--duration,3s) ease-in-out infinite;animation-delay:calc(var(--delay,0s) + var(--phase,0s));opacity:.75}
+.live-bar:nth-of-type(even){fill:var(--accent)}
+.lab-liquid{fill:currentColor;opacity:.23}
+.lab-bubble{fill:var(--glow);animation:reaction-bubble 3s linear infinite;animation-delay:var(--delay,0s);filter:drop-shadow(0 0 2px var(--glow))}
+.dna-rung{stroke:var(--accent);stroke-width:1.5;opacity:.55}
+.wave-trace{fill:none;stroke:var(--accent);stroke-width:1.6;stroke-dasharray:1;animation:wave-draw 4s ease-in-out infinite}
+.scan-line{fill:none;stroke:var(--glow);stroke-width:2;filter:drop-shadow(0 0 3px var(--glow));animation:vision-scan 3s ease-in-out infinite}
+.radar-sweep{fill:var(--glow);opacity:.25;transform-origin:80px 46px;animation:radar-scan 5s linear infinite}
+@keyframes signal-flow{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes node-activate{0%,65%,100%{fill:var(--diagram-fill);filter:none}25%,40%{fill:var(--glow);filter:drop-shadow(0 0 3px var(--glow))}}
+@keyframes bar-update{0%,100%{transform:scaleY(.8)}20%{transform:scaleY(.46)}45%{transform:scaleY(.94)}70%{transform:scaleY(.62)}}
+@keyframes reaction-bubble{0%{transform:translateY(0);opacity:0}15%{opacity:1}85%{opacity:.8}100%{transform:translateY(-34px);opacity:0}}
+@keyframes wave-draw{0%{stroke-dashoffset:1;opacity:.3}55%,80%{stroke-dashoffset:0;opacity:1}100%{stroke-dashoffset:-1;opacity:.3}}
+@keyframes vision-scan{0%,100%{transform:translateY(0)}50%{transform:translateY(58px)}}
+@keyframes radar-scan{to{transform:rotate(360deg)}}
+@media(min-width:768px){.science-icon.card-img{width:160px;height:100px}}
+@media(prefers-reduced-motion:reduce){.science-icon *{animation:none!important}.signal{stroke-dasharray:none;stroke-width:1;opacity:.4}.lab-bubble{opacity:.8}.wave-trace{stroke-dasharray:none}}
