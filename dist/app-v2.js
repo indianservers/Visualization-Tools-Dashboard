@@ -47,8 +47,7 @@ function filterHint(){const more=filters.scrollWidth-filters.clientWidth-filters
 
 
 document.addEventListener('click',e=>{const a=e.target.closest('a[href="#home"]');if(a){e.preventDefault();window.scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'})}});
-// Order the actual DOM for phones, so visual and keyboard navigation agree.
-const phoneLayout=matchMedia('(max-width:767px)');
-function arrangeForScreen(){const subjectsSection=$('#subjects'),personal=$('#your-space'),featured=$('.featured');if(phoneLayout.matches){subjectsSection.after(personal);personal.after(featured)}else{subjectsSection.before(personal);personal.after(featured)}}
-phoneLayout.addEventListener('change',arrangeForScreen);arrangeForScreen();
+// Keep categories first on every screen, including keyboard navigation.
+const subjectsSection=$('#subjects'),personal=$('#your-space'),featured=$('.featured');
+subjectsSection.after(personal);personal.after(featured);
 
