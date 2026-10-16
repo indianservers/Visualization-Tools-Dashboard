@@ -1,0 +1,152 @@
+Implement the shared AIMER Society account system in this website. Users may visit this subdomain directly, sign up here, or arrive already signed in from another AIMER website.
+
+Reference implementation:
+C:\Indian Servers\Tools Dashboard
+
+Read these files first:
+- dist/auth.js
+- dist/account-ui.js
+- dist/auth.css
+- dist/account-client.mjs
+- dist/onboarding-ui.js
+- dist/onboarding.css
+- dist/index.html
+- dist/profile.html
+- dist/profile.mjs
+- api/session.js
+- api/profile.js
+- lib/account.js
+- README.md
+
+Shared branding assets:
+- dist/assets/brand.svg
+- dist/assets/onboarding-mascot.png
+- dist/assets/onboarding-icons.png
+
+Inspect this repository’s framework and instructions before making changes. Adapt the implementation to its framework; do not copy dashboard-specific subject IDs or learning data into this website.
+
+Architecture
+Use the existing Firebase project:
+mlvisualizationsaimersweb
+
+Use ONE account and ONE common profile across all AIMER websites:
+https://tools.aimersociety.com/profile
+
+Central authentication endpoints:
+https://tools.aimersociety.com/api/session
+https://tools.aimersociety.com/api/profile
+
+Use credentials: "include" for cross-origin requests. The existing production session cookie is Secure, HttpOnly, scoped to aimersociety.com, and shared across subdomains. Never create a JavaScript-readable authentication cookie or store ID tokens in localStorage.
+
+Do not create another Firebase project, user database, profile table, or independent session system.
+
+Account experience
+1. Add a polished account control to the top navigation.
+2. Guests see “Continue to login”.
+3. Signed-in users see their Google photo or initials and first name.
+4. Match the reference’s logo, colors, spacing, rounded dialogs, icons, pastel interest cards, and blue-to-purple buttons.
+5. Support desktop, mobile, keyboard navigation, focus restoration, Escape, reduced motion, loading states, and readable errors.
+6. Keep public educational content accessible without login.
+
+Signup and login
+- Support Google and email/password directly from this website’s popup.
+- Reuse the existing Firebase web configuration from the reference.
+- For Google, exchange the Firebase ID token through the CENTRAL session endpoint.
+- For email signup, support name, email, password, optional mobile number, email verification, resend verification, and verification checking.
+- Require verified email before creating an AIMER session.
+- Support email/password login and password reset.
+- Firebase handles passwords; never send them to our application backend or Neon.
+- Use memory-only Firebase SDK persistence.
+- Sign out of the temporary Firebase client session after successful server-session creation.
+- Reuse safe, non-enumerating error messages and prevent duplicate submissions.
+
+Direct visits and return navigation
+- On page load, check the central session endpoint.
+- A user already signed in elsewhere should be recognized automatically.
+- Preserve the current page, route, and relevant hash when login begins.
+- After successful login, return to the original learning page.
+- For central-login fallback, use:
+  https://tools.aimersociety.com/?login=1&returnTo=ENCODED_URL
+- Allow only explicitly trusted HTTPS AIMER destinations. Reject external domains, credential-bearing URLs, unsafe protocols, and redirect loops.
+- Do not force users through the Tools homepage merely to browse this website.
+
+Common profile and account menu
+Provide:
+- Profile → https://tools.aimersociety.com/profile
+- My Learning → this website’s learning area, if it exists
+- Personalize learning → the shared onboarding experience
+- Tools → https://tools.aimersociety.com/ in a new tab
+- AIMER Home → https://www.aimersociety.com/
+- Sign out → DELETE the central session endpoint
+
+Profile edits must use the central profile API and the existing
+X-Aimer-Account header containing the current verified account UID.
+Do not let clients change UID, email ownership, verification flags, or roles.
+
+Mobile numbers are optional contact information saved in the common profile.
+Do not label them SMS-verified or enable phone login without implementing a separate verification flow.
+
+Onboarding
+Reuse the illustrated two-step popup:
+1. Interests: AI, Science, Engineering, Computing, Maths, Explore All.
+2. Optional mobile number.
+
+Load and save the existing common profile. Preserve previously saved interests when users skip. Do not show onboarding repeatedly after completion.
+
+Learning data
+The reference dashboard’s learning field contains Tools-specific subject IDs.
+Do NOT reuse or overwrite it for this website’s lessons, favorites, or progress.
+
+If this website needs cloud learning storage, first design a separate,
+site-namespaced API/schema keyed by the verified Firebase UID and website ID.
+Preserve existing local saves and avoid mixing data between accounts.
+
+Security
+- Browser login state controls presentation only.
+- Protected backend routes must verify the Firebase session cookie using
+  Firebase Admin verifySessionCookie(cookie, true).
+- Scope private queries to the verified UID.
+- Keep private responses uncached.
+- Preserve exact-origin CORS and CSRF protections.
+- Handle expired sessions and non-JSON service errors gracefully.
+- Never expose Firebase service-account credentials or database credentials.
+
+Configuration prerequisites
+Identify this website’s exact production origin.
+It must be added to:
+1. Firebase Authentication authorized domains for direct sign-in.
+2. AUTH_ALLOWED_ORIGINS on the CENTRAL Tools Vercel project.
+3. The explicit safe-return hostname list in the reference implementation.
+
+Do not replace the existing origin list; append the new trusted origin.
+If central configuration is unavailable, complete the local integration and
+report the exact configuration changes still required. Do not claim shared
+login works until those prerequisites are satisfied.
+
+Do not read, copy, print, or commit:
+C:\Indian Servers\Tools Dashboard\.env.local
+or any service-account JSON/private key.
+
+Verification
+Check:
+- Direct guest visit.
+- Existing session from another subdomain.
+- Google login and verified email login.
+- Signup verification and password-reset UI.
+- Return to the original page.
+- Common profile loading.
+- Shared logout.
+- Expired-session recovery.
+- Mobile layout and keyboard navigation.
+- No regression to existing website functionality.
+
+Use mocks/emulators where appropriate. Do not create production test accounts,
+send real authentication emails, or modify real user data without authorization.
+
+Implement the changes, run appropriate checks, and report:
+- Files changed.
+- What was verified.
+- Any remaining Firebase/Vercel configuration.
+- Any flows requiring a real-user test.
+
+Commit and push to main after checks pass. Never force-push.
