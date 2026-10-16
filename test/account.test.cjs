@@ -26,3 +26,8 @@ test('three-way sync preserves remote additions and local removals', async () =>
   const base={favorites:[1,2],pinned:[],recent:[]};
   assert.deepEqual(mergeLearning(base,{favorites:[2,3],pinned:[],recent:[]},{favorites:[1,2,4],pinned:[],recent:[]}).favorites,[2,4,3]);
 });
+test('unchanged local recent activity does not restore history cleared elsewhere',async()=>{
+  const {mergeLearning}=await import('../dist/learning-merge.mjs');
+  const base={favorites:[],pinned:[],recent:[{type:'subject',id:1,time:1}]};
+  assert.deepEqual(mergeLearning(base,base,{favorites:[],pinned:[],recent:[]}).recent,[]);
+});

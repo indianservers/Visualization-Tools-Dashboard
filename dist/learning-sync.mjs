@@ -28,6 +28,7 @@ async function load(user) {
   const current = ++generation;
   uid = user?.uid || null; ready = false; dirty = false; clearTimeout(timer); retry.hidden = true;
   bridge.setAccount(uid);
+  base = uid ? pending()?.base || bridge.snapshot() : null;
   document.querySelector('#sync-device').hidden = !uid;
   document.querySelector('#welcome-copy').textContent = '';
   document.querySelector('#continue-learning').hidden = true;
@@ -71,7 +72,7 @@ async function save() {
   finally { saving = false; if (dirty && retry.hidden) timer = setTimeout(save, 300); }
 }
 window.addEventListener('aimer-account', e => load(e.detail));
-window.addEventListener('aimer-learning-change', () => { if (!uid || !ready) return; dirty = true; keepPending(); clearTimeout(timer); timer = setTimeout(save, 400); });
+window.addEventListener('aimer-learning-change', () => { if (!uid) return; dirty = true; keepPending(); if (!ready) return; clearTimeout(timer); timer = setTimeout(save, 400); });
 window.addEventListener('online', () => { if (uid) ready ? save() : load({uid}); });
 retry.addEventListener('click', () => ready ? save() : load(uid ? { uid } : null));
 document.querySelector('#sync-device').addEventListener('click', () => {
