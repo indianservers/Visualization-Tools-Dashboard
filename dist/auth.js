@@ -145,13 +145,23 @@ window.addEventListener('aimer-session-expired', () => {
 });
 const onboarding = document.querySelector('#onboarding-dialog');
 window.addEventListener('aimer-onboarding', e => {
-  document.querySelector('#onboarding-mobile').value = e.detail.mobileNumber || pendingMobile || '';
-  if (!onboarding.open && !busy) onboarding.showModal(); else if (busy) setTimeout(() => { if (currentUser && !onboarding.open) onboarding.showModal(); }, 250);
+  const profile = { ...e.detail, mobileNumber: e.detail.mobileNumber || pendingMobile || '' };
+  if (!onboarding.open && !busy) window.aimerOnboarding.open(profile);
+  else if (busy) setTimeout(() => { if (currentUser && !onboarding.open) window.aimerOnboarding.open(profile); }, 250);
+});
+document.querySelector('#personalize-learning').addEventListener('click', async () => {
+  const control = document.querySelector('#personalize-learning'); control.disabled = true;
+  try {
+    const profile = await getProfile();
+    document.querySelector('#account-dialog').close(); window.aimerOnboarding.open(profile);
+  } catch (error) { status.textContent = error.message; }
+  finally { control.disabled = false; }
 });
 async function finishOnboarding(skip) {
   const controls = [...onboarding.querySelectorAll('button')]; controls.forEach(b => b.disabled = true);
   try {
-    await updateProfile({ ...(skip ? {} : { mobileNumber: mobileValue(document.querySelector('#onboarding-mobile').value) }), interests: skip ? [] : [...onboarding.querySelectorAll('input:checked')].map(i => i.value), onboardingComplete: true }, currentUser.uid);
+    const skipInterests = skip && onboarding.dataset.step === '1';
+    await updateProfile({ ...(skip ? {} : { mobileNumber: mobileValue(document.querySelector('#onboarding-mobile').value) }), interests: skipInterests ? JSON.parse(onboarding.dataset.originalInterests || '[]') : [...onboarding.querySelectorAll('.interest-card input:checked')].map(i => i.value).filter(value => value !== 'all'), onboardingComplete: true }, currentUser.uid);
     onboarding.close();
     const destination = safeReturnTo(new URLSearchParams(location.search).get('returnTo'));
     if (destination) location.assign(destination);
