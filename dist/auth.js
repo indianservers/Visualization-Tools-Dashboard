@@ -87,7 +87,7 @@ function authError(error) {
   const messages = {
     'auth/popup-closed-by-user': 'Sign-in cancelled. You can try again.',
     'auth/popup-blocked': 'Allow pop-ups for this site, then try again.',
-    'auth/operation-not-allowed': 'This sign-in method must be enabled in Firebase.',
+    'auth/operation-not-allowed': lastAttempt === 'phone' ? 'SMS sign-in is unavailable for this country. Try Google or email, or check Firebase Phone and SMS region settings.' : 'This sign-in method is unavailable. Try another method or check Firebase settings.',
     'auth/unauthorized-domain': 'This website needs to be authorized in Firebase.',
     'auth/invalid-credential': 'We couldn’t sign you in. Check your email and password, or try Google.',
     'auth/wrong-password': 'We couldn’t sign you in. Check your email and password, or try Google.',
