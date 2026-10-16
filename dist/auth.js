@@ -26,6 +26,7 @@ window.addEventListener('aimer-profile', e => {
 function render(user) {
   const changed = currentUser?.uid !== user?.uid || currentUser === undefined;
   currentUser = user;
+  document.querySelector('#account-dialog').classList.toggle('is-signed-in', Boolean(user));
   const trigger = document.querySelector('#account-trigger');
   trigger.classList.toggle('is-signed-in', Boolean(user));
   trigger.setAttribute('aria-label', user ? `Account: ${user.name || user.email || 'Signed in'}` : 'Continue to login');
