@@ -2,6 +2,30 @@
 
 ## Google login and shared sessions
 
+### Profiles and learning sync
+
+Apply `db/002-profile.sql` after `db/001-users.sql`. `/profile` is served through
+an authenticated Vercel function and redirects guests to sign-in. The HTML shell
+contains no personal information. `/api/profile` verifies the Firebase session
+with revocation checks on every request, scopes all SQL to the verified UID, and
+uses exact origin checks for mutations. PATCH also requires X-Aimer-Account to
+match that UID so a stale page cannot save into a different signed-in account.
+Email, UID and Google photo are not editable through profile requests.
+
+Learning state uses versioned writes and a three-way merge after concurrent edits.
+Guest saves and each account use separate browser storage. Existing guest saves
+can be imported with “Bring this device’s saves”; signing out restores guest saves.
+The dashboard syncs favorites, pins and eight recent resources, not progress
+inside external learning websites. Those sites require their own integration.
+
+To return users after sign-in, link to
+`https://tools.aimersociety.com/?login=1&returnTo=` plus an encoded HTTPS URL.
+The client only accepts the explicit trusted AIMER hostname list in
+`dist/account-client.mjs`. Update it and AUTH_ALLOWED_ORIGINS when integrating
+another website. Google branding is still managed in Google Auth Platform.
+
+Privacy and service-use pages are available at `/privacy.html` and `/terms.html`.
+
 The dashboard uses the `mlvisualizationsaimersweb` Firebase project for Google sign-in.
 The Vercel function at `/api/session` verifies recent Google ID tokens, upserts a
 profile into Neon, and creates a five-day HttpOnly, Secure session cookie for

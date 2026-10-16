@@ -67,7 +67,7 @@ module.exports = async function handler(req, res) {
     await sql`INSERT INTO aimer_users (firebase_uid, email, display_name, photo_url)
       VALUES (${user.uid}, ${user.email}, ${user.name || null}, ${user.picture || null})
       ON CONFLICT (firebase_uid) DO UPDATE SET email = EXCLUDED.email,
-      display_name = EXCLUDED.display_name, photo_url = EXCLUDED.photo_url, last_login_at = NOW()`;
+      photo_url = EXCLUDED.photo_url, last_login_at = NOW()`;
     stage = 'session-creation';
     const session = await firebaseAuth.createSessionCookie(idToken, { expiresIn });
     res.setHeader('Set-Cookie', cookie(session, expiresIn / 1000, shared));

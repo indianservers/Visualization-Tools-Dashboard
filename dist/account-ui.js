@@ -7,6 +7,7 @@
     document.querySelector('#menu').setAttribute('aria-expanded', 'false');
   });
   document.querySelector('#account-close').addEventListener('click', () => dialog.close());
+  document.querySelector('#account-learning').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', event => {
     const bounds = dialog.getBoundingClientRect();
     if (event.target === dialog && (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom)) dialog.close();
