@@ -1,3 +1,4 @@
+import { setupPhoneInput } from './phone-input.mjs';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import { readSessionResponse } from './session-response.mjs';
 import { getProfile, updateProfile, safeReturnTo, photo } from './account-client.mjs';
@@ -12,6 +13,7 @@ const app = initializeApp({
   appId: '1:593351107909:web:e2ba110eb27a8ef6830a2c'
 });
 const auth = getAuth(app);
+const phoneInput = setupPhoneInput();
 const button = document.querySelector('#google-login');
 const logout = document.querySelector('#google-logout');
 const status = document.querySelector('#auth-status');
@@ -324,7 +326,7 @@ async function phoneAction(task) {
   if (busy) return;
   busy = true; lastAttempt = 'phone'; pendingMobile = '';
   emailBusy(true); button.disabled = true;
-  for (const el of phoneSection.querySelectorAll('button,input')) el.disabled = true;
+  for (const el of phoneSection.querySelectorAll('button,input,select')) el.disabled = true;
   phoneSection.setAttribute('aria-busy', 'true');
   document.querySelector('#auth-retry').hidden = true;
   try { await persistence; await task(); }
@@ -332,13 +334,12 @@ async function phoneAction(task) {
   finally {
     await signOut(auth).catch(() => {});
     busy = false; emailBusy(false); button.disabled = false;
-    for (const el of phoneSection.querySelectorAll('button,input')) el.disabled = false;
+    for (const el of phoneSection.querySelectorAll('button,input,select')) el.disabled = false;
     phoneSection.setAttribute('aria-busy', 'false'); phoneCooldown();
   }
 }
 async function sendPhoneCode() {
-  const number = mobileValue(document.querySelector('#login-phone').value.trim());
-  if (!number) throw new Error('Enter your phone number with country code.');
+  const number = phoneInput.validate();
   if (Date.now() < phoneResendAt) throw new Error('Please wait before requesting another SMS.');
   phoneConfirmation = null;
   clearPhoneVerifier();
