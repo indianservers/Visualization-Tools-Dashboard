@@ -1,0 +1,6 @@
+.account-panel{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;padding:12px 5%;background:var(--panel,#fff);border-bottom:1px solid #dce5ef}
+.account-panel button{font:inherit;border:1px solid #c9d8ec;border-radius:10px;padding:9px 14px;cursor:pointer;background:#fff;color:#164478}
+.account-panel button:disabled{cursor:default;opacity:.75}
+.account-panel [hidden]{display:none}
+#auth-status{font-size:13px;color:inherit;max-width:100%;overflow-wrap:anywhere}
+@media(max-width:600px){.account-panel{justify-content:center;padding:10px 16px}#auth-status{width:100%;text-align:center}}
