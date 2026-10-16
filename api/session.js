@@ -16,6 +16,7 @@ function profile(user) {
   return { uid: user.uid, email: user.email || null, name: user.name || null, picture: user.picture || null };
 }
 module.exports = async function handler(req, res) {
+  let stage = 'request';
   res.setHeader('Cache-Control', 'no-store');
   const allowed = (process.env.AUTH_ALLOWED_ORIGINS || 'https://tools.aimersociety.com').split(',').map(s => s.trim());
   const origin = req.headers.origin;
@@ -50,7 +51,9 @@ module.exports = async function handler(req, res) {
     const { idToken } = req.body || {};
     if (typeof idToken !== 'string' || idToken.length > 16000) return res.status(400).json({ error: 'Invalid login token.' });
     let user;
+    stage = 'firebase-initialization';
     const firebaseAuth = auth();
+    stage = 'token-verification';
     try { user = await firebaseAuth.verifyIdToken(idToken, true); }
     catch (error) {
       console.error('Firebase token verification failed', { code: error.code || 'unknown' });
@@ -58,18 +61,26 @@ module.exports = async function handler(req, res) {
     }
     if (Date.now() / 1000 - user.auth_time > 300 || user.firebase?.sign_in_provider !== 'google.com' || !user.email_verified) return res.status(401).json({ error: 'A recent verified Google sign-in is required.' });
     if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Profile storage is awaiting server configuration.' });
+    stage = 'profile-storage';
     const { neon } = require('@neondatabase/serverless');
     const sql = neon(process.env.DATABASE_URL);
     await sql`INSERT INTO aimer_users (firebase_uid, email, display_name, photo_url)
       VALUES (${user.uid}, ${user.email}, ${user.name || null}, ${user.picture || null})
       ON CONFLICT (firebase_uid) DO UPDATE SET email = EXCLUDED.email,
       display_name = EXCLUDED.display_name, photo_url = EXCLUDED.photo_url, last_login_at = NOW()`;
-    const session = await auth().createSessionCookie(idToken, { expiresIn });
+    stage = 'session-creation';
+    const session = await firebaseAuth.createSessionCookie(idToken, { expiresIn });
     res.setHeader('Set-Cookie', cookie(session, expiresIn / 1000, shared));
     return res.status(200).json({ user: profile(user) });
   } catch (error) {
     // Log codes only: provider messages can contain connection credentials.
-    console.error('Session request failed', { code: error.code || 'unknown', type: error.name });
-    return res.status(500).json({ error: 'Login could not complete. Please try again or contact support.' });
+    const code = typeof error.code === 'string' && /^[a-zA-Z0-9_/-]{1,80}$/.test(error.code) ? error.code : 'unknown';
+    console.error('Session request failed', { stage, code, type: error.name });
+    const messages = {
+      'firebase-initialization': 'Firebase server setup failed. Check FIREBASE_SERVICE_ACCOUNT_JSON in Vercel.',
+      'profile-storage': 'Unable to save your profile. Check the Vercel DATABASE_URL and Neon connection.',
+      'session-creation': 'Unable to create your login session. Check Firebase service-account permissions.'
+    };
+    return res.status(500).json({ error: `${messages[stage] || 'Login could not complete. Please try again.'} (${stage}: ${code})` });
   }
 };
