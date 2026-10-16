@@ -1,0 +1,16 @@
+{
+  "generator": "Built-in image_gen tool",
+  "reference": "User-supplied AIMER Society onboarding popup reference",
+  "assets": [
+    {
+      "file": "onboarding-mascot.png",
+      "transparentBackground": true,
+      "prompt": "Create a production website illustration asset using the attached screenshot ONLY as visual reference. Reproduce closely the friendly glossy white-and-cyan 3D robot in the bottom-left: smiling black screen face with cyan curved eyes, blue headphones, tiny antenna, holding an open blue book with stylized letter A, sitting behind a stack of three blue purple teal books marked EXPLORE, LEARN, BUILD, green potted plant on left. The robot, plant and books form one isolated illustration. NO UI, NO backdrop, NO headings, NO border, no surrounding screenshot. Transparent background, high quality soft 3D rendering, matching the reference pose, colors, lighting, proportions. Square composition, entire object visible with small margins. This is an asset for the existing AIMER onboarding popup."
+    },
+    {
+      "file": "onboarding-icons.png",
+      "transparentBackground": true,
+      "prompt": "Create ONE transparent PNG sprite atlas for a website, exactly 3 equal columns by 2 equal rows, perfectly regular grid, square cells, aspect ratio 3:2. Use attached onboarding screenshot as reference. SIX distinct glossy toy-like 3D icons matching the screenshot closely: top left white/cyan friendly tiny robot head with black screen and cyan eyes and blue antenna (AI), top center purple atom with three orbital rings and pink electron (Science), top right warm orange golden gear (Engineering), bottom left bright blue small laptop with white </> code symbol on screen (Computing), bottom center pink coral calculator with white plus minus multiply equals (Maths), bottom right luminous cyan/blue lightbulb with short rays (Explore All). Each icon centered at its cell center, same perceived scale, completely contained in its cell with generous transparent space at least 18 percent padding around each icon. No labels, no card backgrounds, no grid lines, no shadows outside each icon, no UI. Output one atlas image, width 1536 height 1024 or equivalent exact 3:2 ratio. Transparent background."
+    }
+  ]
+}
