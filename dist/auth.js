@@ -1,7 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import { readSessionResponse } from './session-response.mjs';
 import { getProfile, updateProfile, safeReturnTo, photo } from './account-client.mjs';
-import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, inMemoryPersistence, signOut } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, inMemoryPersistence, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, updateProfile as updateFirebaseProfile, reload, validatePassword } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 
 const app = initializeApp({
   apiKey: 'AIzaSyDKiPMjAuHqmFFm1l6tW3YMCkF7xQlsoMw',
@@ -17,6 +17,8 @@ const logout = document.querySelector('#google-logout');
 const status = document.querySelector('#auth-status');
 let currentUser;
 let busy = false;
+let emailMode = 'signin', pendingVerification = null, pendingMobile = '';
+let lastAttempt = 'google';
 const persistence = setPersistence(auth, inMemoryPersistence);
 window.addEventListener('aimer-profile', e => {
   if (currentUser?.uid === e.detail.uid) render({ ...currentUser, name: e.detail.name, picture: e.detail.picture });
@@ -33,7 +35,7 @@ function render(user) {
   else avatar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>';
   if (user) { photo(avatar, user); photo(document.querySelector('#profile-initial'), user); }
   document.querySelector('#account-title').innerHTML = user ? 'Welcome to AIMER.' : 'A little curiosity.<br>Endless possibilities.';
-  document.querySelector('#account-description').textContent = user ? 'You’re signed in. Let’s explore something new.' : 'Sign in or create your account with Google. Your next discovery starts here.';
+  document.querySelector('#account-description').textContent = user ? 'You’re signed in. Let’s explore something new.' : 'Sign in with Google or your email. Your next discovery starts here.';
   document.querySelector('#account-profile').hidden = !user;
   document.querySelector('#profile-name').textContent = user?.name || '';
   document.querySelector('#profile-email').textContent = user?.email || '';
@@ -44,6 +46,8 @@ function render(user) {
   logout.hidden = !user;
   document.querySelector('#account-links').hidden = !user;
   document.querySelector('#shared-account').hidden = Boolean(user);
+  document.querySelector('#email-toggle').hidden = Boolean(user) || Boolean(pendingVerification);
+  if (user) { document.querySelector('#email-auth').hidden = true; document.querySelector('#email-verification').hidden = true; }
   if (changed) window.dispatchEvent(new CustomEvent('aimer-account', { detail: user }));
 }
 async function session(method = 'GET', idToken) {
@@ -53,9 +57,51 @@ async function session(method = 'GET', idToken) {
   });
   return readSessionResponse(response);
 }
+function emailBusy(value) {
+  document.querySelector('#email-auth').setAttribute('aria-busy', String(value));
+  for (const el of document.querySelectorAll('#email-auth button,#email-auth input,#email-toggle,#email-verification button')) el.disabled = value;
+}
+function mobileValue(value) {
+  const normalized = value.replace(/[ ()-]/g, '');
+  if (normalized && !/^\+[1-9]\d{7,14}$/.test(normalized)) throw new Error('Enter a mobile number with country code, such as +91 98765 43210.');
+  return normalized;
+}
+async function completeLogin(user) {
+  render(await session('POST', await user.getIdToken(true)));
+  if (pendingMobile) { await updateProfile({mobileNumber: pendingMobile}, user.uid); pendingMobile = ''; }
+  status.textContent = 'Signed in to AIMER Society.';
+  document.querySelector('#account-dialog').close();
+  const destination = safeReturnTo(new URLSearchParams(location.search).get('returnTo'));
+  if (destination) {
+    const p = await getProfile();
+    if (p.onboardingComplete) location.assign(destination);
+    else window.dispatchEvent(new CustomEvent('aimer-onboarding', { detail: p }));
+  }
+}
+function authError(error) {
+  const messages = {
+    'auth/popup-closed-by-user': 'Sign-in cancelled. You can try again.',
+    'auth/popup-blocked': 'Allow pop-ups for this site, then try again.',
+    'auth/operation-not-allowed': 'This sign-in method must be enabled in Firebase.',
+    'auth/unauthorized-domain': 'This website needs to be authorized in Firebase.',
+    'auth/invalid-credential': 'We couldn’t sign you in. Check your email and password, or try Google.',
+    'auth/wrong-password': 'We couldn’t sign you in. Check your email and password, or try Google.',
+    'auth/user-not-found': 'We couldn’t sign you in. Check your email and password, or try Google.',
+    'auth/email-already-in-use': 'Unable to create this account. Try signing in, Google, or password reset.',
+    'auth/account-exists-with-different-credential': 'Try your original sign-in method to access this account.',
+    'auth/weak-password': 'Choose a stronger password that meets the password requirements.',
+    'auth/invalid-email': 'Enter a valid email address.',
+    'auth/too-many-requests': 'Too many attempts. Please wait a few minutes before trying again.',
+    'auth/network-request-failed': 'Connection interrupted. Check your internet and try again.'
+  };
+  status.textContent = messages[error.code] || (error.code?.startsWith('auth/') ? 'Sign-in could not complete. Please try again.' : error.message);
+  document.querySelector('#auth-retry').hidden = false;
+  if (document.querySelector('#account-dialog').open) status.scrollIntoView({ block: 'nearest' });
+}
 button.addEventListener('click', async () => {
   if (busy) return;
   busy = true;
+  lastAttempt = 'google'; pendingMobile = ''; emailBusy(true);
   button.disabled = true;
   status.textContent = 'Connecting to Google…';
   button.classList.add('is-loading');
@@ -66,25 +112,11 @@ button.addEventListener('click', async () => {
     const result = await signInWithPopup(auth, new GoogleAuthProvider());
     status.textContent = 'Signing you in…';
     button.querySelector('span').textContent = 'Signing you in…';
-    render(await session('POST', await result.user.getIdToken()));
-    status.textContent = 'Signed in to AIMER Society.';
-    document.querySelector('#account-dialog').close();
-    const destination = safeReturnTo(new URLSearchParams(location.search).get('returnTo'));
-    if (destination) {
-      const p = await getProfile();
-      if (p.onboardingComplete) location.assign(destination);
-      else window.dispatchEvent(new CustomEvent('aimer-onboarding', { detail: p }));
-    }
+    await completeLogin(result.user);
   } catch (error) {
-    status.textContent = ({
-      'auth/popup-closed-by-user': 'Sign-in cancelled. You can try again.',
-      'auth/popup-blocked': 'Allow pop-ups for this site, then try again.',
-      'auth/operation-not-allowed': 'Google sign-in must be enabled in Firebase.',
-      'auth/unauthorized-domain': 'This website needs to be authorized in Firebase.'
-    })[error.code] || error.message;
-    document.querySelector('#auth-retry').hidden = false;
+    authError(error);
   } finally {
-    await signOut(auth).catch(() => {}); button.disabled = false; busy = false;
+    await signOut(auth).catch(() => {}); button.disabled = false; busy = false; emailBusy(false);
     button.classList.remove('is-loading'); button.querySelector('span').textContent = 'Continue with Google';
   }
 });
@@ -96,21 +128,30 @@ logout.addEventListener('click', async () => {
   finally { logout.disabled = false; busy = false; }
 });
 async function refresh() {
-  if (busy) return;
+  if (busy || pendingVerification) return;
   try { render(await session()); status.textContent = ''; }
   catch (error) { render(null); status.textContent = error.message; document.querySelector('#auth-retry').hidden = false; }
 }
-document.querySelector('#auth-retry').addEventListener('click', () => currentUser ? refresh() : button.click());
+document.querySelector('#auth-retry').addEventListener('click', () => {
+  if (busy) return;
+  if (pendingVerification) document.querySelector('#check-verification').click();
+  else if (lastAttempt === 'reset') document.querySelector('#forgot-password').click();
+  else if (lastAttempt === 'email') document.querySelector('#email-form').requestSubmit();
+  else if (currentUser) refresh(); else button.click();
+});
 window.addEventListener('aimer-session-expired', () => {
   render(null); status.textContent = 'Your session expired. Sign in again to sync your learning space.';
   document.querySelector('#account-trigger').click();
 });
 const onboarding = document.querySelector('#onboarding-dialog');
-window.addEventListener('aimer-onboarding', () => { if (!onboarding.open && !busy) onboarding.showModal(); else if (busy) setTimeout(() => { if (currentUser && !onboarding.open) onboarding.showModal(); }, 250); });
+window.addEventListener('aimer-onboarding', e => {
+  document.querySelector('#onboarding-mobile').value = e.detail.mobileNumber || pendingMobile || '';
+  if (!onboarding.open && !busy) onboarding.showModal(); else if (busy) setTimeout(() => { if (currentUser && !onboarding.open) onboarding.showModal(); }, 250);
+});
 async function finishOnboarding(skip) {
   const controls = [...onboarding.querySelectorAll('button')]; controls.forEach(b => b.disabled = true);
   try {
-    await updateProfile({ interests: skip ? [] : [...onboarding.querySelectorAll('input:checked')].map(i => i.value), onboardingComplete: true }, currentUser.uid);
+    await updateProfile({ ...(skip ? {} : { mobileNumber: mobileValue(document.querySelector('#onboarding-mobile').value) }), interests: skip ? [] : [...onboarding.querySelectorAll('input:checked')].map(i => i.value), onboardingComplete: true }, currentUser.uid);
     onboarding.close();
     const destination = safeReturnTo(new URLSearchParams(location.search).get('returnTo'));
     if (destination) location.assign(destination);
@@ -119,6 +160,121 @@ async function finishOnboarding(skip) {
 }
 document.querySelector('#onboarding-save').addEventListener('click', () => finishOnboarding(false));
 document.querySelector('#onboarding-skip').addEventListener('click', () => finishOnboarding(true));
+const emailForm = document.querySelector('#email-form');
+function setEmailMode(mode) {
+  emailMode = mode;
+  document.querySelector('#signup-fields').hidden = mode !== 'signup';
+  document.querySelector('#signup-name').required = mode === 'signup';
+  document.querySelector('#signin-password').minLength = mode === 'signup' ? 8 : 1;
+  document.querySelector('#signin-password').autocomplete = mode === 'signup' ? 'new-password' : 'current-password';
+  document.querySelector('#password-help').hidden = mode !== 'signup';
+  document.querySelector('#email-submit').textContent = mode === 'signup' ? 'Create account →' : 'Sign in with email →';
+  document.querySelector('#forgot-password').hidden = mode === 'signup';
+  document.querySelector('#email-signin-tab').setAttribute('aria-pressed', mode === 'signin');
+  document.querySelector('#email-signup-tab').setAttribute('aria-pressed', mode === 'signup');
+}
+function verificationView(user) {
+  pendingVerification = user;
+  document.querySelector('#email-auth').hidden = true;
+  document.querySelector('#email-toggle').hidden = true;
+  document.querySelector('#email-verification').hidden = false;
+  button.hidden = true;
+  document.querySelector('#signin-password').value = '';
+}
+function actionSettings() {
+  const url = new URL('/?login=1', location.origin);
+  const destination = safeReturnTo(new URLSearchParams(location.search).get('returnTo'));
+  if (destination) url.searchParams.set('returnTo', destination);
+  return { url: url.href };
+}
+async function emailAction(task, message) {
+  if (busy) return;
+  busy = true; emailBusy(true); button.disabled = true;
+  status.textContent = message; document.querySelector('#auth-retry').hidden = true;
+  document.querySelector('#email-submit').classList.add('is-loading');
+  try { await persistence; await task(); }
+  catch (error) { authError(error); }
+  finally {
+    if (!pendingVerification) await signOut(auth).catch(() => {});
+    busy = false; emailBusy(false); button.disabled = false;
+    document.querySelector('#email-submit').classList.remove('is-loading');
+  }
+}
+document.querySelector('#email-toggle').addEventListener('click', () => {
+  const section = document.querySelector('#email-auth'); section.hidden = !section.hidden;
+  document.querySelector('#email-toggle').setAttribute('aria-expanded', !section.hidden);
+  if (!section.hidden) { setEmailMode('signin'); document.querySelector('#signin-email').focus(); }
+});
+document.querySelector('#email-signin-tab').addEventListener('click', () => setEmailMode('signin'));
+document.querySelector('#email-signup-tab').addEventListener('click', () => setEmailMode('signup'));
+document.querySelector('#toggle-password').addEventListener('click', () => {
+  const input = document.querySelector('#signin-password'), show = input.type === 'password'; input.type = show ? 'text' : 'password';
+  document.querySelector('#toggle-password').textContent = show ? 'Hide' : 'Show';
+  document.querySelector('#toggle-password').setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+});
+emailForm.addEventListener('submit', e => {
+  e.preventDefault(); lastAttempt = 'email';
+  emailAction(async () => {
+    const email = document.querySelector('#signin-email').value.trim(), password = document.querySelector('#signin-password').value;
+    let result;
+    if (emailMode === 'signup') {
+      const displayName = document.querySelector('#signup-name').value.trim();
+      if (!displayName) throw new Error('Enter your name to create an account.');
+      pendingMobile = mobileValue(document.querySelector('#signup-mobile').value);
+      if (!(await validatePassword(auth, password)).isValid) throw new Error('Choose a password that meets the account password requirements.');
+      result = await createUserWithEmailAndPassword(auth, email, password);
+      verificationView(result.user);
+      await updateFirebaseProfile(result.user, {displayName});
+      await sendEmailVerification(result.user, actionSettings());
+      status.textContent = 'Verification email sent. Check your inbox and spam folder.';
+    } else {
+      pendingMobile = '';
+      result = await signInWithEmailAndPassword(auth, email, password);
+      if (!result.user.emailVerified) {
+        verificationView(result.user);
+        await sendEmailVerification(result.user, actionSettings());
+        status.textContent = 'Verify your email to finish signing in. We sent a new link.';
+      } else {
+        document.querySelector('#signin-password').value = '';
+        await completeLogin(result.user);
+      }
+    }
+  }, emailMode === 'signup' ? 'Creating your account…' : 'Signing you in…');
+});
+document.querySelector('#forgot-password').addEventListener('click', () => {
+  const input = document.querySelector('#signin-email');
+  if (!input.reportValidity()) return;
+  lastAttempt = 'reset';
+  emailAction(async () => {
+    try { await sendPasswordResetEmail(auth, input.value.trim(), actionSettings()); }
+    catch (error) { if (error.code !== 'auth/user-not-found') throw error; }
+    status.textContent = 'If an eligible account exists, a password reset link will arrive in your inbox. Check spam too.';
+    document.querySelector('#signin-password').value = '';
+  }, 'Requesting a reset link…');
+});
+document.querySelector('#resend-verification').addEventListener('click', () => emailAction(async () => {
+  if (!pendingVerification) return;
+  await sendEmailVerification(pendingVerification, actionSettings());
+  status.textContent = 'Verification email sent. Check your inbox and spam folder.';
+}, 'Sending verification link…'));
+document.querySelector('#check-verification').addEventListener('click', () => emailAction(async () => {
+  if (!pendingVerification) return;
+  await reload(pendingVerification);
+  if (!pendingVerification.emailVerified) { status.textContent = 'Your email is not verified yet. Open the latest verification link, then try again.'; return; }
+  const verified = pendingVerification; pendingVerification = null;
+  try { await completeLogin(verified); }
+  catch (error) {
+    document.querySelector('#email-verification').hidden = true; document.querySelector('#email-auth').hidden = false;
+    document.querySelector('#email-toggle').hidden = false; button.hidden = false; setEmailMode('signin'); throw error;
+  }
+}, 'Checking your verification…'));
+document.querySelector('#cancel-verification').addEventListener('click', () => emailAction(async () => {
+  pendingVerification = null; pendingMobile = ''; await signOut(auth);
+  document.querySelector('#email-verification').hidden = true;
+  document.querySelector('#email-auth').hidden = true;
+  document.querySelector('#email-toggle').setAttribute('aria-expanded', 'false');
+  render(null); status.textContent = '';
+}, 'Returning to sign-in…'));
 await refresh();
 const params = new URLSearchParams(location.search);
 if (params.get('login') === '1') {

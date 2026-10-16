@@ -13,7 +13,7 @@ function cookie(value, age, shared) {
   return `${cookieName}=${value}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${age}${shared ? '; Domain=aimersociety.com' : ''}`;
 }
 function profile(user) {
-  return { uid: user.uid, email: user.email || null, name: user.name || null, picture: user.picture || null };
+  return { uid: user.uid, email: user.email || null, name: user.name || null, picture: user.picture || null, signInMethod: user.firebase?.sign_in_provider || null };
 }
 module.exports = async function handler(req, res) {
   let stage = 'request';
@@ -59,7 +59,7 @@ module.exports = async function handler(req, res) {
       console.error('Firebase token verification failed', { code: error.code || 'unknown' });
       return res.status(401).json({ error: 'Please sign in again.' });
     }
-    if (Date.now() / 1000 - user.auth_time > 300 || user.firebase?.sign_in_provider !== 'google.com' || !user.email_verified) return res.status(401).json({ error: 'A recent verified Google sign-in is required.' });
+    if (!require('../lib/account').validLogin(user)) return res.status(401).json({ error: 'Verify your email and sign in again with Google or email/password.' });
     if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Profile storage is awaiting server configuration.' });
     stage = 'profile-storage';
     const { neon } = require('@neondatabase/serverless');

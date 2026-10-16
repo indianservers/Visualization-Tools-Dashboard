@@ -54,3 +54,10 @@ test('profile page redirects guests and serves only a generic shell to verified 
   assert.equal(signedIn.code,200);assert.match(signedIn.body,/id="profile-content" hidden/);assert.doesNotMatch(signedIn.body,/alice@example/);
   assert.match(signedIn.headers['Cache-Control'],/no-store/);
 });
+test('mobile number updates are normalized, private, and can be cleared',async()=>{
+  calls.length=0;
+  assert.equal((await request('PATCH',{mobileNumber:'+91 98765 43210'},{cookie:'valid-session','x-aimer-account':'verified-alice'})).code,200);
+  assert.ok(calls[0].values.includes('+919876543210'));assert.equal(calls[0].values.at(-1),'verified-alice');
+  assert.equal((await request('PATCH',{mobileNumber:''},{cookie:'valid-session','x-aimer-account':'verified-alice'})).code,200);
+  assert.equal((await request('PATCH',{mobileNumber:'+919876543210'})).code,401);
+});

@@ -4,6 +4,20 @@
 
 ### Profiles and learning sync
 
+Mobile numbers are optional contact fields in Neon (`db/003-mobile.sql`), normalized
+to international +countrycode format. They are not phone-login credentials or
+SMS-verified. Owners can add, change or clear their number from their profile.
+
+Google and email/password authentication both exchange recent, verified Firebase
+ID tokens for the same shared server session. Enable Email/Password in Firebase
+Authentication. The browser supports signup, verification resend/check, and
+password reset using Firebase's hosted email action handler. Passwords never go
+to this application's API or Neon. Unverified users remain signed in only in
+the browser SDK's memory until verification; no AIMER session/profile is issued.
+After a verification link is used in another tab/device, return and choose
+“I've verified my email”, or sign in again. Sessions require authentication in
+the last five minutes, so older verification flows require another sign-in.
+
 Apply `db/002-profile.sql` after `db/001-users.sql`. `/profile` is served through
 an authenticated Vercel function and redirects guests to sign-in. The HTML shell
 contains no personal information. `/api/profile` verifies the Firebase session

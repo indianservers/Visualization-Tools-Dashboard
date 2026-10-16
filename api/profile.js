@@ -21,17 +21,19 @@ module.exports = async (req, res) => {
           WHERE firebase_uid = ${user.uid} AND learning_version = ${update.version} RETURNING firebase_uid`;
         if (!rows.length) return res.status(409).json({ error: 'Your learning space changed on another device. Reload before saving.' });
       }
-      if (update.displayName !== undefined || update.interests !== undefined || update.onboardingComplete !== undefined) {
+      if (update.displayName !== undefined || update.mobileNumber !== undefined || update.interests !== undefined || update.onboardingComplete !== undefined) {
         await sql`UPDATE aimer_users SET display_name = COALESCE(${update.displayName ?? null}, display_name),
           interests = COALESCE(${update.interests === undefined ? null : JSON.stringify(update.interests)}::jsonb, interests),
+          mobile_number = CASE WHEN ${Object.hasOwn(update, 'mobileNumber')} THEN ${update.mobileNumber ?? null} ELSE mobile_number END,
           onboarding_complete = COALESCE(${update.onboardingComplete ?? null}, onboarding_complete) WHERE firebase_uid = ${user.uid}`;
       }
     }
-    const rows = await sql`SELECT firebase_uid, email, display_name, photo_url, created_at, last_login_at, interests, onboarding_complete, learning, learning_version FROM aimer_users WHERE firebase_uid = ${user.uid}`;
+    const rows = await sql`SELECT firebase_uid, email, display_name, photo_url, mobile_number, created_at, last_login_at, interests, onboarding_complete, learning, learning_version FROM aimer_users WHERE firebase_uid = ${user.uid}`;
     const row = rows[0];
     if (!row) return res.status(404).json({ error: 'Profile not found. Please sign out and sign in again.' });
     return res.status(200).json({ profile: {
       uid: row.firebase_uid, email: row.email, name: row.display_name, picture: row.photo_url,
+      mobileNumber: row.mobile_number || null, mobileVerified: false, signInMethod: user.firebase?.sign_in_provider || null,
       createdAt: row.created_at, lastLoginAt: row.last_login_at, interests: row.interests,
       onboardingComplete: row.onboarding_complete, learning: row.learning, version: row.learning_version
     } });
