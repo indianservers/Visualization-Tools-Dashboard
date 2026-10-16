@@ -10,10 +10,15 @@ test('session endpoint blocks unapproved and missing mutation origins', async ()
   assert.equal((await request('POST')).code, 403);
   assert.equal((await request('DELETE', { origin: 'https://evil.aimersociety.com' })).code, 403);
 });
-test('session endpoint fails closed without server credentials', async () => {
+test('login fails closed without credentials while anonymous GET remains available', async () => {
   const saved = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   delete process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-  try { assert.equal((await request('GET')).code, 503); }
+  try {
+    const guest = await request('GET');
+    assert.equal(guest.code, 200);
+    assert.deepEqual(guest.body, { user: null });
+    assert.equal((await request('POST', { origin: 'https://tools.aimersociety.com' })).code, 503);
+  }
   finally { if (saved) process.env.FIREBASE_SERVICE_ACCOUNT_JSON = saved; }
 });
 test('logout clears secure shared cookie and does not cache', async () => {

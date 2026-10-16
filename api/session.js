@@ -1,10 +1,9 @@
-const { initializeApp, getApps, cert } = require('firebase-admin/app');
-const { getAuth } = require('firebase-admin/auth');
-const { neon } = require('@neondatabase/serverless');
 const cookieName = '__Secure-aimer_session';
 const expiresIn = 5 * 24 * 60 * 60 * 1000;
 
 function auth() {
+  const { initializeApp, getApps, cert } = require('firebase-admin/app');
+  const { getAuth } = require('firebase-admin/auth');
   if (!getApps().length) {
     initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON)) });
   }
@@ -38,7 +37,6 @@ module.exports = async function handler(req, res) {
     res.setHeader('Set-Cookie', cookie('', 0, shared));
     return res.status(200).json({ user: null });
   }
-  if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) return res.status(503).json({ error: 'Google login is awaiting server configuration.' });
   try {
     if (req.method === 'GET') {
       const cookies = (req.headers.cookie || '').split(';').map(c => c.trim());
@@ -47,14 +45,20 @@ module.exports = async function handler(req, res) {
       try { return res.status(200).json({ user: profile(await auth().verifySessionCookie(token, true)) }); }
       catch { res.setHeader('Set-Cookie', cookie('', 0, shared)); return res.status(401).json({ error: 'Please sign in again.' }); }
     }
+    if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON) return res.status(503).json({ error: 'Google login is awaiting server configuration.' });
     if (!req.headers['content-type']?.startsWith('application/json')) return res.status(415).json({ error: 'JSON required.' });
     const { idToken } = req.body || {};
     if (typeof idToken !== 'string' || idToken.length > 16000) return res.status(400).json({ error: 'Invalid login token.' });
     let user;
-    try { user = await auth().verifyIdToken(idToken, true); }
-    catch { return res.status(401).json({ error: 'Please sign in again.' }); }
+    const firebaseAuth = auth();
+    try { user = await firebaseAuth.verifyIdToken(idToken, true); }
+    catch (error) {
+      console.error('Firebase token verification failed', { code: error.code || 'unknown' });
+      return res.status(401).json({ error: 'Please sign in again.' });
+    }
     if (Date.now() / 1000 - user.auth_time > 300 || user.firebase?.sign_in_provider !== 'google.com' || !user.email_verified) return res.status(401).json({ error: 'A recent verified Google sign-in is required.' });
     if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Profile storage is awaiting server configuration.' });
+    const { neon } = require('@neondatabase/serverless');
     const sql = neon(process.env.DATABASE_URL);
     await sql`INSERT INTO aimer_users (firebase_uid, email, display_name, photo_url)
       VALUES (${user.uid}, ${user.email}, ${user.name || null}, ${user.picture || null})
@@ -63,7 +67,9 @@ module.exports = async function handler(req, res) {
     const session = await auth().createSessionCookie(idToken, { expiresIn });
     res.setHeader('Set-Cookie', cookie(session, expiresIn / 1000, shared));
     return res.status(200).json({ user: profile(user) });
-  } catch {
+  } catch (error) {
+    // Log codes only: provider messages can contain connection credentials.
+    console.error('Session request failed', { code: error.code || 'unknown', type: error.name });
     return res.status(500).json({ error: 'Login could not complete. Please try again or contact support.' });
   }
 };

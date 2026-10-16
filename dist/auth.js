@@ -1,4 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
+import { readSessionResponse } from './session-response.mjs';
 import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, inMemoryPersistence, signOut } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 
 const app = initializeApp({
@@ -26,9 +27,7 @@ async function session(method = 'GET', idToken) {
     method, credentials: 'include',
     ...(method === 'POST' ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken }) } : {})
   });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.error || 'Unable to connect. Please try again.');
-  return data.user;
+  return readSessionResponse(response);
 }
 button.addEventListener('click', async () => {
   button.disabled = true;
