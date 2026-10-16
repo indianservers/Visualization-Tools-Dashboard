@@ -96,3 +96,17 @@ flow, SMS consent information, and readable quota/configuration errors.
 Do not log SMS codes or store them in browser storage. Client contact fields
 never grant a verified phone identity. The session API accepts only recent,
 Admin-verified Firebase phone tokens with a valid international phone claim.
+
+### Icon animations and browser verification
+
+`dist/icon-motion.js` defines the 21 subject and four app demonstrations. The original
+3D PNGs remain visible during playback. Internal components are isolated with SVG
+masks and clips; light, signal and text overlays run finite Web Animations sequences.
+No browser animation library is shipped. Reduced motion leaves the original artwork static.
+
+Run `npm test` for the unit/API suite. For browser verification, run
+`npx playwright install chromium` once, then `npm run test:browser`.
+The browser suite starts/reuses the local server and checks desktop, Pixel 7 touch
+emulation, and 360/768/840px layouts. It saves labeled contact sheets, a per-icon matrix,
+and a machine-readable report under `browser-tests/results/` (ignored by Git).
+See `ICON-ANIMATION-VERIFICATION.md` for coverage and device-testing limits.

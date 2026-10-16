@@ -1,24 +1,26 @@
-/* Artwork stays still; only subject-specific mechanisms animate. */
-.icon-tile .realistic-icon{display:block;width:108px;height:108px;max-width:100%;overflow:visible;filter:drop-shadow(0 3px 3px #0c28441a)}
-.subject-mechanism{fill:none;stroke:#38d9f5;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-.atom-orbit{stroke:var(--tone);stroke-width:2}
-.motion-electron{fill:#fbbf24;stroke:#fff;stroke-width:1;offset-rotate:0deg;animation:electron-orbit 3.6s linear infinite}
-.motion-node{fill:#a5ffff;stroke:none;animation:node-activate 2.4s ease-in-out infinite}
-.motion-track{stroke:#8be6ff;stroke-width:1.5;opacity:.7}
-.motion-rung{stroke:#a78bfa;animation:node-activate 3s ease-in-out infinite}
-.motion-curve{stroke:#fde68a;stroke-dasharray:120;animation:plot-function 4s ease-in-out infinite}
-.motion-bar{fill:#86e5ff;stroke:none;transform-box:fill-box;transform-origin:bottom;animation:chart-update 3s ease-in-out infinite}
-.motion-row{fill:#82f5dc;stroke:none;animation:node-activate 2.8s ease-in-out infinite}
-.motion-focus{stroke:#a4ffff;transform-origin:64px 64px;animation:lens-focus 4s ease-in-out infinite}
-.motion-logic{fill:#bbffbc;stroke:none;animation:logic-switch 2.4s steps(1) infinite}
-.motion-filament{stroke:#fff8a6;stroke-width:4;animation:filament-heat 3s ease-in-out infinite}
-.motion-lock{stroke:#d2faff;animation:lock-close 4s ease-in-out infinite}
-@keyframes electron-orbit{to{offset-distance:100%}}
-@keyframes node-activate{0%,100%{opacity:.2}40%,60%{opacity:1}}
-@keyframes plot-function{0%,10%{stroke-dashoffset:120}65%,85%{stroke-dashoffset:0}100%{stroke-dashoffset:-120}}
-@keyframes chart-update{0%,100%{transform:scaleY(.65)}50%{transform:scaleY(1)}}
-@keyframes lens-focus{0%,100%{transform:scale(.88)}50%{transform:scale(1.08)}}
-@keyframes logic-switch{0%,100%{opacity:.2}50%{opacity:1}}
-@keyframes filament-heat{0%,100%{opacity:.4;filter:none}50%{opacity:1;filter:drop-shadow(0 0 5px #ffc400)}}
-@keyframes lock-close{0%,20%,100%{transform:translateY(-5px)}35%,85%{transform:translateY(0)}}
-@media(prefers-reduced-motion:reduce){.subject-motion *{animation:none!important}.motion-curve{stroke-dashoffset:0}.motion-electron{offset-distance:25%}}
+/* Source 3D artwork and isolated source-image components keep their materials,
+   lighting and proportions at rest and throughout playback. */
+.icon-tile .realistic-icon{display:block;width:100%;height:100%;max-width:100%;overflow:hidden;filter:drop-shadow(0 3px 3px #0c28441a)}
+.concept-icon{display:block;flex-shrink:0;overflow:hidden;border-radius:12px;pointer-events:none;color:#a9f7ff}
+.demo-original{opacity:1}
+.demo-art{opacity:0;fill:none;stroke:#9cf6ff;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.demo-art text{fill:#dbfdff;stroke:#146bc5;stroke-width:.3;paint-order:stroke;font-family:ui-monospace,monospace;font-weight:700}
+.demo-art [data-part],.demo-components [data-part]{transform-box:fill-box;transform-origin:center}
+.demo-components [data-part^=bar],.demo-components [data-part=columns]{transform-origin:center bottom}
+.demo-components [data-part^=bar]{transform-box:view-box;transform-origin:64px 103px}
+.demo-components [data-part=gear]{transform-box:view-box;transform-origin:75px 75px}
+.demo-components [data-part=eyes]{transform-box:view-box;transform-origin:76px 50px}
+.demo-art [data-part=columns]{transform-box:view-box;transform-origin:64px 111px}
+.demo-column-light{fill:#adfbff;fill-opacity:.3;stroke:none}
+.demo-window-underlay{fill:#02a9f4;stroke:none}
+.demo-art [pathLength]{stroke-dasharray:1;stroke-dashoffset:inherit}
+.demo-bead{fill:var(--demo-light);stroke:#e0ffff;stroke-width:.65}
+.demo-packet{fill:var(--demo-metal);stroke:#d8faff;stroke-width:.7}
+.demo-pi{stroke:#acffff;stroke-width:2.2}
+.demo-filament{stroke:#fff6bd;stroke-width:2.7}
+.demo-heat{fill:#ffe68b;fill-opacity:.18;stroke:none}
+[data-part=tokens] rect,[data-part=query] rect,[data-part=answer] rect{fill:#c7ffff;fill-opacity:.6;stroke:#fff;stroke-width:.7}
+.app-card>.concept-icon{width:56px;height:56px}
+.tool-links a>.concept-icon{width:55px;height:55px}
+.featured>.concept-icon{width:85px;height:85px}
+@media(prefers-reduced-motion:reduce){.concept-icon *{animation:none!important;transition:none!important}}

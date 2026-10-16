@@ -1,152 +1,236 @@
-Implement the shared AIMER Society account system in this website. Users may visit this subdomain directly, sign up here, or arrive already signed in from another AIMER website.
+Implement the CURRENT shared AIMER Society account experience on this new website. Complete the implementation and verification; do not stop at a plan.
 
-Reference implementation:
-C:\Indian Servers\Tools Dashboard
+GOAL
+Users signed into any trusted AIMER subdomain should be recognized here. Support Google, email, and phone authentication through the existing shared account service. Keep public content accessible to guests.
 
-Read these files first:
-- dist/auth.js
-- dist/account-ui.js
-- dist/auth.css
-- dist/account-client.mjs
-- dist/onboarding-ui.js
-- dist/onboarding.css
+SOURCE OF TRUTH
+Reference repository: C:\Indian Servers\Tools Dashboard
+Production reference: https://tools.aimersociety.com
+Firebase project: mlvisualizationsaimersweb
+
+Read applicable repository instructions and inspect this website’s framework first.
+
+Read the CURRENT reference files:
 - dist/index.html
-- dist/profile.html
-- dist/profile.mjs
-- api/session.js
-- api/profile.js
-- lib/account.js
-- README.md
+- dist/auth.js, dist/auth.css, dist/account-ui.js
+- dist/account-client.mjs, dist/session-response.mjs
+- dist/phone-input.mjs, dist/phone-number.mjs
+- dist/vendor/libphonenumber-max.js and accompanying license
+- dist/assets/flags/*.svg and their license
+- dist/onboarding-ui.js, dist/onboarding.css
+- dist/profile.html, dist/profile.mjs
+- api/session.js, api/profile.js, lib/account.js
+- Relevant database migrations, README.md, deployment configuration, CORS handling, and safe-return allowlists
 
-Shared branding assets:
-- dist/assets/brand.svg
-- dist/assets/onboarding-mascot.png
-- dist/assets/onboarding-icons.png
+Resolve reference paths against the Tools repository. Adapt the implementation to this website’s framework. Do not blindly copy relative API URLs or introduce duplicate authentication systems.
 
-Inspect this repository’s framework and instructions before making changes. Adapt the implementation to its framework; do not copy dashboard-specific subject IDs or learning data into this website.
+If the reference is unavailable, obtain current public assets where possible and state what remains unavailable. Do not silently use an obsolete implementation.
 
-Architecture
-Use the existing Firebase project:
-mlvisualizationsaimersweb
+ONE ACCOUNT SYSTEM
+Use the existing Firebase project, public web configuration, central account API, and shared profile.
 
-Use ONE account and ONE common profile across all AIMER websites:
-https://tools.aimersociety.com/profile
+Central endpoints:
+- Session: https://tools.aimersociety.com/api/session
+- Profile: https://tools.aimersociety.com/api/profile
+- Profile page: https://tools.aimersociety.com/profile
 
-Central authentication endpoints:
-https://tools.aimersociety.com/api/session
-https://tools.aimersociety.com/api/profile
+CRITICAL: On this website, ALL account requests must target these absolute central endpoints, including initial session checks, login POST, profile GET/PATCH, refresh, onboarding, and logout DELETE.
 
-Use credentials: "include" for cross-origin requests. The existing production session cookie is Secure, HttpOnly, scoped to aimersociety.com, and shared across subdomains. Never create a JavaScript-readable authentication cookie or store ID tokens in localStorage.
+The Tools reference may use relative URLs because it runs on Tools. Do not copy those relative URLs onto another subdomain.
 
-Do not create another Firebase project, user database, profile table, or independent session system.
+Use one central endpoint configuration and credentials: 'include' on every account request. Use cache: 'no-store' for private session/profile reads.
 
-Account experience
-1. Add a polished account control to the top navigation.
-2. Guests see “Continue to login”.
-3. Signed-in users see their Google photo or initials and first name.
-4. Match the reference’s logo, colors, spacing, rounded dialogs, icons, pastel interest cards, and blue-to-purple buttons.
-5. Support desktop, mobile, keyboard navigation, focus restoration, Escape, reduced motion, loading states, and readable errors.
-6. Keep public educational content accessible without login.
+Example:
+fetch('https://tools.aimersociety.com/api/session', {
+  credentials: 'include',
+  cache: 'no-store'
+});
 
-Signup and login
-- Support Google and email/password directly from this website’s popup.
-- Reuse the existing Firebase web configuration from the reference.
-- For Google, exchange the Firebase ID token through the CENTRAL session endpoint.
-- For email signup, support name, email, password, optional mobile number, email verification, resend verification, and verification checking.
-- Require verified email before creating an AIMER session.
-- Support email/password login and password reset.
-- Firebase handles passwords; never send them to our application backend or Neon.
-- Use memory-only Firebase SDK persistence.
-- Sign out of the temporary Firebase client session after successful server-session creation.
-- Reuse safe, non-enumerating error messages and prevent duplicate submissions.
+Do not create another Firebase project, profile database, or independent session service.
 
-Direct visits and return navigation
-- On page load, check the central session endpoint.
-- A user already signed in elsewhere should be recognized automatically.
-- Preserve the current page, route, and relevant hash when login begins.
-- After successful login, return to the original learning page.
-- For central-login fallback, use:
-  https://tools.aimersociety.com/?login=1&returnTo=ENCODED_URL
-- Allow only explicitly trusted HTTPS AIMER destinations. Reject external domains, credential-bearing URLs, unsafe protocols, and redirect loops.
-- Do not force users through the Tools homepage merely to browse this website.
+PRODUCTION DOMAIN SETUP — REQUIRED
+Determine this website’s exact production HTTPS origin from its configuration. Do not guess or leave placeholder domains in deployed code.
 
-Common profile and account menu
-Provide:
+Verify:
+1. Its hostname is authorized in the shared Firebase project for direct authentication.
+2. Its EXACT origin is included in AUTH_ALLOWED_ORIGINS on the production Tools deployment.
+3. Its hostname is included in the central safe-return allowlist.
+
+Append approved entries without removing existing trusted domains.
+
+When authorized configuration access is available, complete the necessary integration and redeploy the central service. If access is unavailable, finish the implementation and report the exact missing configuration action.
+
+Do not claim shared authentication works until browser requests from this website’s actual origin have been verified.
+
+CORS AND CONNECTIVITY
+Verify credentialed requests and applicable OPTIONS preflights for:
+- GET/POST/DELETE /api/session
+- GET/PATCH /api/profile
+
+Confirm:
+- Access-Control-Allow-Origin matches this website’s exact origin.
+- Access-Control-Allow-Credentials is true.
+- Allowed methods match the handlers.
+- Allowed headers include Content-Type and X-Aimer-Account where required.
+- Allowed-origin error responses also include appropriate CORS headers.
+- Origin-dependent responses have correct cache behavior.
+- OPTIONS requests are not blocked by authentication middleware, deployment protection, or redirects.
+
+Never use wildcard CORS with credentials, reflect arbitrary origins, or weaken CSRF protections.
+
+Configure this website’s CSP to permit the required central API, Firebase, Google, and reCAPTCHA resources using the current implementation’s actual dependencies.
+
+If a request fails, inspect its URL, method, Origin, status, response, preflight, and browser console. Distinguish CORS, CSP, network, server, and authentication errors. Do not hide failures behind a generic message or use a Tools redirect as the only repair.
+
+SHARED SESSION
+Reuse the existing production cookie:
+__Secure-aimer_session
+Secure; HttpOnly; SameSite=Lax; Domain=aimersociety.com
+
+Verify the current server contract. Do not weaken cookie settings.
+
+The central HttpOnly session is the source of truth. A Firebase browser SDK session alone is insufficient.
+
+On initial load and appropriate focus/pageshow events:
+- Check the central session.
+- Recognize an existing shared login automatically.
+- Distinguish anonymous, expired, rejected, and temporarily unavailable states.
+- Avoid duplicate requests and stale responses overwriting newer state.
+
+Never store ID tokens or session credentials in localStorage or JavaScript-readable cookies.
+
+AUTHENTICATION METHODS
+Use the current reference implementation for Google, email, and phone.
+
+Google:
+- Use the shared Firebase configuration and provider.
+- Exchange a recent Firebase ID token through POST to the central session endpoint with JSON { idToken } and credentials included.
+- Confirm the central session before showing successful authentication.
+
+Email:
+- Support sign-in, signup, verification, verification resend, “I've verified my email,” and password reset.
+- Signup asks only for name, email, and password.
+- Enforce the current Firebase password policy.
+- Refresh the user and token after email verification.
+- Follow the central verified-email requirement.
+- Never send passwords to AIMER APIs or the database.
+- Avoid disclosing whether an email address has an account.
+
+Phone:
+- Implement actual SMS OTP authentication.
+- Reuse current Firebase reCAPTCHA lifecycle and signInWithPhoneNumber behavior.
+- Use separate country and national-number inputs, defaulting to India (+91).
+- Show local SVG flags, country names, and calling codes.
+- Reuse libphonenumber validation; convert to E.164 only after validation.
+- Support six-digit code entry, autofill, resend cooldown, change number, and invalid/expired-code recovery.
+- Show required SMS consent, carrier-charge, and Google abuse-prevention information before sending.
+- Preserve the current SMS region policy. Verify current settings before claiming support for additional countries.
+- Explain provider, region, quota, and billing errors accurately.
+- Phone-only users may have no name or email. Do not require email verification for a verified phone identity.
+
+All methods:
+- Use memory-only Firebase persistence for temporary authentication.
+- Clear temporary Firebase sign-in after successful central-session creation.
+- Preserve temporary state required for pending email verification or OTP confirmation.
+- Prevent duplicate submissions and preserve input after recoverable errors.
+- Do not auto-link accounts by matching email or contact phone.
+- Guide provider conflicts toward the original sign-in method.
+
+MOBILE-FIRST ACCOUNT UI
+Build for 360px and 390px screens first, and keep it usable at 320px.
+
+Header:
+- Guests: one “Continue to login” control.
+- Signed in: photo or initials and first name, with a neutral phone-only fallback.
+
+Login dialog:
+- Immediately show Continue with Google, Continue with email, and Continue with phone.
+- Show only the selected form.
+- Keep the mobile layout compact, without large illustrations or repeated promotional text.
+- Use real labels, correct autocomplete, suitable keyboards, 16px input text, and at least 44px touch targets.
+- Provide visible focus, accessible loading states, inline errors, and show/hide password.
+- Support keyboard navigation, focus trapping/restoration, Escape, dialog labels, aria-live status, autofill, and reduced motion.
+- Keep close and navigation controls accessible when the keyboard is open.
+- Scope account CSS so site styles cannot break it.
+
+At desktop sizes, the default login dialog and signed-in menu should fit at 1280×720 without internal scrolling. Expanded forms and small viewports may scroll naturally. Never conceal controls or errors using overflow clipping.
+
+ACCOUNT MENU
+Include:
 - Profile → https://tools.aimersociety.com/profile
-- My Learning → this website’s learning area, if it exists
-- Personalize learning → the shared onboarding experience
-- Tools → https://tools.aimersociety.com/ in a new tab
+- My Learning → this website’s learning area, only if it exists
+- Personalize learning → shared onboarding
+- Tools → https://tools.aimersociety.com/ in a new tab with noopener
 - AIMER Home → https://www.aimersociety.com/
 - Sign out → DELETE the central session endpoint
 
-Profile edits must use the central profile API and the existing
-X-Aimer-Account header containing the current verified account UID.
-Do not let clients change UID, email ownership, verification flags, or roles.
+After logout, clear temporary Firebase state and update the UI. Handle logout failures honestly.
 
-Mobile numbers are optional contact information saved in the common profile.
-Do not label them SMS-verified or enable phone login without implementing a separate verification flow.
+PROFILE AND ONBOARDING
+Load and save the common profile through the central API.
 
-Onboarding
-Reuse the illustrated two-step popup:
-1. Interests: AI, Science, Engineering, Computing, Maths, Explore All.
-2. Optional mobile number.
+Follow the current PATCH contract, including:
+- Content-Type: application/json
+- X-Aimer-Account: current verified account UID
 
-Load and save the existing common profile. Preserve previously saved interests when users skip. Do not show onboarding repeatedly after completion.
+Server-side ownership checks remain authoritative. Never allow profile input to alter identity, roles, email ownership, or verification flags.
 
-Learning data
-The reference dashboard’s learning field contains Tools-specific subject IDs.
-Do NOT reuse or overwrite it for this website’s lessons, favorites, or progress.
+Keep onboarding optional and skippable. Do not repeat completed onboarding or erase interests when skipped.
 
-If this website needs cloud learning storage, first design a separate,
-site-namespaced API/schema keyed by the verified Firebase UID and website ID.
-Preserve existing local saves and avoid mixing data between accounts.
+Keep the verified authentication phone separate from editable optional contact information.
 
-Security
-- Browser login state controls presentation only.
-- Protected backend routes must verify the Firebase session cookie using
-  Firebase Admin verifySessionCookie(cookie, true).
-- Scope private queries to the verified UID.
-- Keep private responses uncached.
-- Preserve exact-origin CORS and CSRF protections.
-- Handle expired sessions and non-JSON service errors gracefully.
-- Never expose Firebase service-account credentials or database credentials.
+LEARNING DATA
+Do not store this website’s lesson IDs, favorites, or progress in Tools-specific learning fields.
 
-Configuration prerequisites
-Identify this website’s exact production origin.
-It must be added to:
-1. Firebase Authentication authorized domains for direct sign-in.
-2. AUTH_ALLOWED_ORIGINS on the CENTRAL Tools Vercel project.
-3. The explicit safe-return hostname list in the reference implementation.
+Preserve existing local saves and account separation. If cloud progress is required, use an explicitly designed site-namespaced API/schema keyed by verified UID and site ID.
 
-Do not replace the existing origin list; append the new trusted origin.
-If central configuration is unavailable, complete the local integration and
-report the exact configuration changes still required. Do not claim shared
-login works until those prerequisites are satisfied.
+RETURN NAVIGATION
+Preserve the current route, query, and meaningful hash through authentication.
 
-Do not read, copy, print, or commit:
-C:\Indian Servers\Tools Dashboard\.env.local
-or any service-account JSON/private key.
+Provide this fallback when useful:
+https://tools.aimersociety.com/?login=1&returnTo=ENCODED_HTTPS_URL
 
-Verification
-Check:
-- Direct guest visit.
-- Existing session from another subdomain.
-- Google login and verified email login.
-- Signup verification and password-reset UI.
-- Return to the original page.
-- Common profile loading.
-- Shared logout.
-- Expired-session recovery.
-- Mobile layout and keyboard navigation.
-- No regression to existing website functionality.
+Use the current explicit trusted-host policy. Reject unsafe schemes, URL credentials, unexpected ports, untrusted hosts, and redirect loops.
 
-Use mocks/emulators where appropriate. Do not create production test accounts,
-send real authentication emails, or modify real user data without authorization.
+Guests must remain free to browse public content without visiting Tools.
 
-Implement the changes, run appropriate checks, and report:
-- Files changed.
-- What was verified.
-- Any remaining Firebase/Vercel configuration.
-- Any flows requiring a real-user test.
+SECURITY
+Protected backend routes must verify the shared session using the existing Firebase Admin verification approach and scope data access to the verified UID.
 
-Commit and push to main after checks pass. Never force-push.
+Keep private responses uncached. Preserve origin checks, CSRF protections, ownership checks, and safe redirects.
+
+Never print, commit, or place private credentials in frontend code. Do not expose cookies, ID tokens, service-account keys, database URLs, or environment secrets in diagnostics.
+
+VERIFICATION
+Run relevant automated checks and real browser checks.
+
+Verify:
+- Public guest access.
+- Anonymous central-session requests from the actual production origin.
+- Credentialed requests and preflights.
+- Recognition of an existing Tools login.
+- Direct sign-in and central-session confirmation when an authorized test identity is available.
+- Shared profile and onboarding.
+- Return to the original route.
+- Shared logout and expired-session recovery.
+- Retry after a temporary service failure.
+- Phone-only display and validation behavior.
+- Mobile layouts at 320/360/390px and desktop at 1280×720.
+- No duplicate account handlers, persistent tokens, or stale deployed assets.
+
+Use mocks, emulators, and authorized test identities where appropriate. Do not send real SMS/authentication emails, create production accounts, modify real user data, or broaden SMS regions without explicit authorization.
+
+Do not claim an authentication flow passed unless exercised. Distinguish transport/CORS checks from authenticated end-to-end verification and actual OTP delivery.
+
+DELIVERY
+Implement the integration completely. Run checks, commit and push through the repository’s established workflow without force-pushing, and verify deployed assets when deployment access is available.
+
+Report:
+- What was implemented
+- Production origin and central configuration status
+- Checks passed
+- Deployment and live verification status
+- Exact configuration/access still required
+- Flows that still need a real-user test
+
+Do not describe a rendered login popup as a working shared-account integration.

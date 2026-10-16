@@ -31,14 +31,15 @@ function render(user) {
   document.querySelector('#account-dialog').classList.toggle('is-signed-in', Boolean(user));
   const trigger = document.querySelector('#account-trigger');
   trigger.classList.toggle('is-signed-in', Boolean(user));
-  trigger.setAttribute('aria-label', user ? `Account: ${user.name || user.email || 'Signed in'}` : 'Continue to login');
+  trigger.setAttribute('aria-label', user ? `Account: ${user.name || user.email || 'Signed in'}` : 'Sign in');
   document.querySelector('#account-label').textContent = user ? (user.name || (user.signInMethod === 'phone' ? 'My account' : user.email) || 'My account').split(' ')[0] : 'Continue to login';
   const avatar = trigger.querySelector('.account-avatar');
   if (user) avatar.textContent = (user.name || user.email || 'A').slice(0, 1).toUpperCase();
   else avatar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>';
   if (user) { photo(avatar, user); photo(document.querySelector('#profile-initial'), user); }
-  document.querySelector('#account-title').innerHTML = user ? 'Welcome to AIMER.' : 'Welcome to<br>AIMER Society';
-  document.querySelector('#account-description').textContent = user ? 'You’re signed in. Let’s explore something new.' : 'Sign in to access our learning tools, visualizations and resources.';
+  document.querySelector('#account-label').textContent = user ? (user.name || user.email || 'My account').split(' ')[0] : 'Sign in';
+  document.querySelector('#account-title').textContent = user ? 'Your account' : 'Sign in to AIMER';
+  document.querySelector('#account-description').textContent = user ? '' : 'Save your favorites and pick up where you left off.';
   document.querySelector('#account-profile').hidden = !user;
   document.querySelector('#profile-name').textContent = user?.name || '';
   document.querySelector('#profile-email').textContent = user?.email || '';
@@ -136,7 +137,7 @@ button.addEventListener('click', async () => {
 logout.addEventListener('click', async () => {
   busy = true;
   logout.disabled = true;
-  try { await session('DELETE'); await signOut(auth); render(null); status.textContent = 'Signed out.'; }
+  try { await session('DELETE'); await signOut(auth); render(null); status.textContent = 'Signed out.'; document.querySelector('#account-dialog').close(); document.querySelector('#account-trigger').focus({ preventScroll: true }); }
   catch (error) { status.textContent = error.message; }
   finally { logout.disabled = false; busy = false; }
 });

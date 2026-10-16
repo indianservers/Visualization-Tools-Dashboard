@@ -2,3 +2,6 @@
 .env.*
 !.env.example
 node_modules/
+browser-tests/results/
+playwright-report/
+test-results/
