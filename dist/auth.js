@@ -1,7 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
 import { readSessionResponse } from './session-response.mjs';
 import { getProfile, updateProfile, safeReturnTo, photo } from './account-client.mjs';
-import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, inMemoryPersistence, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, updateProfile as updateFirebaseProfile, reload, validatePassword } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, setPersistence, inMemoryPersistence, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail, updateProfile as updateFirebaseProfile, reload, validatePassword, RecaptchaVerifier, signInWithPhoneNumber } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
 
 const app = initializeApp({
   apiKey: 'AIzaSyDKiPMjAuHqmFFm1l6tW3YMCkF7xQlsoMw',
@@ -29,13 +29,13 @@ function render(user) {
   const trigger = document.querySelector('#account-trigger');
   trigger.classList.toggle('is-signed-in', Boolean(user));
   trigger.setAttribute('aria-label', user ? `Account: ${user.name || user.email || 'Signed in'}` : 'Continue to login');
-  document.querySelector('#account-label').textContent = user ? (user.name || 'My account').split(' ')[0] : 'Continue to login';
+  document.querySelector('#account-label').textContent = user ? (user.name || (user.signInMethod === 'phone' ? 'My account' : user.email) || 'My account').split(' ')[0] : 'Continue to login';
   const avatar = trigger.querySelector('.account-avatar');
   if (user) avatar.textContent = (user.name || user.email || 'A').slice(0, 1).toUpperCase();
   else avatar.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>';
   if (user) { photo(avatar, user); photo(document.querySelector('#profile-initial'), user); }
-  document.querySelector('#account-title').innerHTML = user ? 'Welcome to AIMER.' : 'A little curiosity.<br>Endless possibilities.';
-  document.querySelector('#account-description').textContent = user ? 'You’re signed in. Let’s explore something new.' : 'Sign in with Google or your email. Your next discovery starts here.';
+  document.querySelector('#account-title').innerHTML = user ? 'Welcome to AIMER.' : 'Welcome to<br>AIMER Society';
+  document.querySelector('#account-description').textContent = user ? 'You’re signed in. Let’s explore something new.' : 'Sign in to access our learning tools, visualizations and resources.';
   document.querySelector('#account-profile').hidden = !user;
   document.querySelector('#profile-name').textContent = user?.name || '';
   document.querySelector('#profile-email').textContent = user?.email || '';
@@ -47,6 +47,8 @@ function render(user) {
   document.querySelector('#account-links').hidden = !user;
   document.querySelector('#shared-account').hidden = Boolean(user);
   document.querySelector('#email-toggle').hidden = Boolean(user) || Boolean(pendingVerification);
+  document.querySelector('#phone-toggle').hidden = Boolean(user) || Boolean(pendingVerification);
+  if (user) resetPhone();
   if (user) { document.querySelector('#email-auth').hidden = true; document.querySelector('#email-verification').hidden = true; }
   if (changed) window.dispatchEvent(new CustomEvent('aimer-account', { detail: user }));
 }
@@ -92,6 +94,13 @@ function authError(error) {
     'auth/weak-password': 'Choose a stronger password that meets the password requirements.',
     'auth/invalid-email': 'Enter a valid email address.',
     'auth/too-many-requests': 'Too many attempts. Please wait a few minutes before trying again.',
+    'auth/invalid-phone-number': 'Enter a valid phone number including country code.',
+    'auth/invalid-verification-code': 'That code is incorrect. Check the SMS and try again.',
+    'auth/code-expired': 'This code expired. Request a new one.',
+    'auth/session-expired': 'This code expired. Request a new one.',
+    'auth/captcha-check-failed': 'Verification failed. Please complete reCAPTCHA again.',
+    'auth/quota-exceeded': 'SMS is temporarily unavailable. Try Google or email.',
+    'auth/billing-not-enabled': 'SMS sign-in needs billing enabled in Firebase. Use Google or email for now.',
     'auth/network-request-failed': 'Connection interrupted. Check your internet and try again.'
   };
   status.textContent = messages[error.code] || (error.code?.startsWith('auth/') ? 'Sign-in could not complete. Please try again.' : error.message);
@@ -102,6 +111,7 @@ button.addEventListener('click', async () => {
   if (busy) return;
   busy = true;
   lastAttempt = 'google'; pendingMobile = ''; emailBusy(true);
+  resetPhone();
   button.disabled = true;
   status.textContent = 'Connecting to Google…';
   button.classList.add('is-loading');
@@ -128,13 +138,14 @@ logout.addEventListener('click', async () => {
   finally { logout.disabled = false; busy = false; }
 });
 async function refresh() {
-  if (busy || pendingVerification) return;
+  if (busy || pendingVerification || phoneConfirmation || !document.querySelector('#phone-auth').hidden) return;
   try { render(await session()); status.textContent = ''; }
   catch (error) { render(null); status.textContent = error.message; document.querySelector('#auth-retry').hidden = false; }
 }
 document.querySelector('#auth-retry').addEventListener('click', () => {
   if (busy) return;
   if (pendingVerification) document.querySelector('#check-verification').click();
+  else if (lastAttempt === 'phone') { if (phoneConfirmation) document.querySelector('#phone-code-form').requestSubmit(); else document.querySelector('#phone-number-form').requestSubmit(); }
   else if (lastAttempt === 'reset') document.querySelector('#forgot-password').click();
   else if (lastAttempt === 'email') document.querySelector('#email-form').requestSubmit();
   else if (currentUser) refresh(); else button.click();
@@ -184,6 +195,8 @@ function setEmailMode(mode) {
   document.querySelector('#email-signup-tab').setAttribute('aria-pressed', mode === 'signup');
 }
 function verificationView(user) {
+  resetPhone();
+  document.querySelector('#phone-toggle').hidden = true;
   pendingVerification = user;
   document.querySelector('#email-auth').hidden = true;
   document.querySelector('#email-toggle').hidden = true;
@@ -211,6 +224,8 @@ async function emailAction(task, message) {
   }
 }
 document.querySelector('#email-toggle').addEventListener('click', () => {
+  if (busy) return;
+  resetPhone();
   const section = document.querySelector('#email-auth'); section.hidden = !section.hidden;
   document.querySelector('#email-toggle').setAttribute('aria-expanded', !section.hidden);
   if (!section.hidden) { setEmailMode('signin'); document.querySelector('#signin-email').focus(); }
@@ -285,6 +300,98 @@ document.querySelector('#cancel-verification').addEventListener('click', () => e
   document.querySelector('#email-toggle').setAttribute('aria-expanded', 'false');
   render(null); status.textContent = '';
 }, 'Returning to sign-in…'));
+let phoneConfirmation = null, phoneVerifier = null, phoneResendAt = 0, phoneTimer;
+const phoneSection = document.querySelector('#phone-auth');
+function clearPhoneVerifier() { if (phoneVerifier) { phoneVerifier.clear(); phoneVerifier = null; } }
+function resetPhone() {
+  phoneConfirmation = null;
+  clearPhoneVerifier(); clearInterval(phoneTimer);
+  phoneSection.hidden = true;
+  document.querySelector('#phone-toggle').setAttribute('aria-expanded', 'false');
+  document.querySelector('#phone-number-form').hidden = false;
+  document.querySelector('#phone-code-form').hidden = true;
+  document.querySelector('#phone-code').value = '';
+}
+function phoneCooldown() {
+  const resend = document.querySelector('#phone-resend');
+  const remaining = Math.max(0, Math.ceil((phoneResendAt - Date.now()) / 1000));
+  resend.disabled = busy || remaining > 0;
+  resend.textContent = remaining ? `Resend in ${remaining}s` : 'Resend code';
+  if (!remaining) clearInterval(phoneTimer);
+}
+async function phoneAction(task) {
+  if (busy) return;
+  busy = true; lastAttempt = 'phone'; pendingMobile = '';
+  emailBusy(true); button.disabled = true;
+  for (const el of phoneSection.querySelectorAll('button,input')) el.disabled = true;
+  phoneSection.setAttribute('aria-busy', 'true');
+  document.querySelector('#auth-retry').hidden = true;
+  try { await persistence; await task(); }
+  catch (error) { authError(error); }
+  finally {
+    await signOut(auth).catch(() => {});
+    busy = false; emailBusy(false); button.disabled = false;
+    for (const el of phoneSection.querySelectorAll('button,input')) el.disabled = false;
+    phoneSection.setAttribute('aria-busy', 'false'); phoneCooldown();
+  }
+}
+async function sendPhoneCode() {
+  const number = mobileValue(document.querySelector('#login-phone').value.trim());
+  if (!number) throw new Error('Enter your phone number with country code.');
+  if (Date.now() < phoneResendAt) throw new Error('Please wait before requesting another SMS.');
+  phoneConfirmation = null;
+  clearPhoneVerifier();
+  status.textContent = 'Complete the security check to receive your code…';
+  auth.useDeviceLanguage();
+  phoneVerifier = new RecaptchaVerifier(auth, 'phone-recaptcha', { size: 'normal' });
+  // Keep the verifier visible in the same form during resend.
+  document.querySelector('#phone-number-form').hidden = false;
+  document.querySelector('#phone-code-form').hidden = true;
+  try { phoneConfirmation = await signInWithPhoneNumber(auth, number, phoneVerifier); }
+  finally { clearPhoneVerifier(); }
+  phoneResendAt = Date.now() + 60000;
+  clearInterval(phoneTimer); phoneTimer = setInterval(phoneCooldown, 1000);
+  document.querySelector('#phone-number-form').hidden = true;
+  document.querySelector('#phone-code-form').hidden = false;
+  document.querySelector('#phone-code-hint').textContent = `Code sent to ${number}.`;
+  document.querySelector('#phone-code').value = '';
+  status.textContent = 'SMS sent. Enter the 6-digit code.';
+}
+document.querySelector('#phone-toggle').addEventListener('click', () => {
+  if (busy || pendingVerification) return;
+  const open = phoneSection.hidden;
+  resetPhone(); phoneSection.hidden = !open;
+  document.querySelector('#phone-toggle').setAttribute('aria-expanded', String(open));
+  document.querySelector('#email-auth').hidden = true;
+  document.querySelector('#email-toggle').setAttribute('aria-expanded', 'false');
+  status.textContent = ''; document.querySelector('#auth-retry').hidden = true;
+  if (open) document.querySelector('#login-phone').focus();
+});
+document.querySelector('#phone-number-form').addEventListener('submit', async e => {
+  e.preventDefault(); await phoneAction(sendPhoneCode);
+  if (phoneConfirmation) document.querySelector('#phone-code').focus();
+});
+document.querySelector('#phone-code-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  await phoneAction(async () => {
+    if (!phoneConfirmation) throw new Error('Request a new verification code.');
+    const code = document.querySelector('#phone-code').value.trim();
+    if (!/^\d{6}$/.test(code)) throw new Error('Enter the 6-digit SMS code.');
+    status.textContent = 'Verifying your code…';
+    const result = await phoneConfirmation.confirm(code);
+    await completeLogin(result.user);
+  });
+});
+document.querySelector('#phone-resend').addEventListener('click', () => phoneAction(sendPhoneCode));
+document.querySelector('#phone-change').addEventListener('click', () => {
+  if (busy) return;
+  resetPhone(); phoneSection.hidden = false;
+  document.querySelector('#phone-toggle').setAttribute('aria-expanded', 'true');
+  document.querySelector('#login-phone').focus(); status.textContent = '';
+});
+document.querySelector('#account-dialog').addEventListener('cancel', e => { if (busy) e.preventDefault(); });
+document.querySelector('#account-dialog').addEventListener('close', resetPhone);
+
 await refresh();
 const params = new URLSearchParams(location.search);
 if (params.get('login') === '1') {

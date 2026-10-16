@@ -77,3 +77,22 @@ Run `node server.cjs` and open http://localhost:4173. Deploy the `dist` folder t
 For Vercel, import the repository with Root Directory left at the repository root. The included `vercel.json` selects the Other framework preset, skips the build step, and serves `dist`. Redeploy after this configuration is added. The dashboard sections use hash links (for example, `/#subjects`).
 
 Subjects without a dedicated URL in the request use the relevant supplied ML, IQ Labs, DBMS, digital, or OS destination. Update the subject data in `dist/app.js` when dedicated destinations become available.
+
+### Phone sign-in
+
+The sign-in popup supports Firebase SMS verification alongside Google and email.
+Apply `db/004-phone-auth.sql` before deploying the updated session API. It allows
+phone-only profiles without an email and stores the Firebase-verified sign-in
+number separately from the editable, unverified contact number. Accounts remain
+keyed by Firebase UID; matching a contact number never merges or links accounts.
+
+In Firebase, save the enabled Phone provider, configure allowed SMS regions,
+and authorize the hosted domain. Real SMS requires the Blaze billing plan;
+Firebase fictional test numbers can be used without sending a real SMS. Never
+hard-code test bypasses or OTPs into the app. Phone authentication cannot be
+verified on localhost; test on an authorized HTTPS preview or production host.
+The UI provides reCAPTCHA, a six-digit code field, resend cooldown, change-number
+flow, SMS consent information, and readable quota/configuration errors.
+Do not log SMS codes or store them in browser storage. Client contact fields
+never grant a verified phone identity. The session API accepts only recent,
+Admin-verified Firebase phone tokens with a valid international phone claim.

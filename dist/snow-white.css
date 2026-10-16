@@ -43,7 +43,23 @@ main{max-width:1800px;padding:12px 24px}
 .app-card:nth-child(2) .primary{background:#a45907;border-color:#a45907}.app-card:nth-child(3) .primary{background:#087957;border-color:#087957}.app-card:nth-child(4) .primary{background:#bb2858;border-color:#bb2858}
 @media(min-width:700px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1200px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* Stretch native destination links over cards; keep secondary actions above them. */
+.card .card-launch{inset:0;width:100%;height:100%;display:block;border:0;border-radius:inherit;background:transparent;color:var(--tone);z-index:1}
+.card-launch>span{position:absolute;right:12px;top:16px;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;background:var(--tile)}
+.card-launch:hover>span{background:var(--tone);color:white}
+.card .card-actions button{position:relative;z-index:2}
+.app-card,.featured,.saved-item{position:relative;isolation:isolate}
+.app-card .primary::after,.featured .primary::after,.saved-item>a::after{content:"";position:absolute;inset:0;z-index:1;border-radius:inherit;cursor:pointer}
+.saved-item button{position:relative;z-index:2}
+.card-launch:focus-visible,.app-card .primary:focus-visible::after,.featured .primary:focus-visible::after,.saved-item>a:focus-visible::after{outline:3px solid var(--blue);outline-offset:-3px}
+@media(max-width:767px){.card-launch>span{right:10px;top:12px;width:34px;height:34px}}
 @media(min-width:1700px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:767px){main{padding:8px 12px}.hero-copy{padding:12px 0;gap:10px}.hero h1{font-size:22px}.panel{padding:12px 0}.card{grid-template-columns:98px minmax(0,1fr);column-gap:14px;padding:16px 14px;min-height:202px}.icon-tile{width:98px;height:136px}.card h3{font-size:16px}.card .card-copy{padding-right:24px}.card p{font-size:12px}.card-launch{right:10px;top:12px;width:34px;height:34px}.card .card-actions button{min-height:36px;height:36px;width:36px}.filters{display:flex;flex-wrap:wrap}.filters button:first-child{grid-column:auto}.filters button{flex:1 1 auto}.bottom-nav{background:#fff}}
 @media(min-width:700px) and (max-width:900px){.card{grid-template-columns:84px minmax(0,1fr);column-gap:12px;padding:14px}.icon-tile{width:84px}.subject-art{width:76px}.card h3{font-size:15px}}
 
+/* Let content determine height and fit the icon tile closely to its artwork. */
+.card{min-height:0;padding:12px 14px;row-gap:4px;align-content:start}
+.icon-tile{height:108px;width:108px;align-self:center;border-radius:14px}
+.card h3{margin-bottom:5px}.card p{margin:6px 0}
+@media(max-width:767px){.card{min-height:0;padding:12px;column-gap:12px}.icon-tile{height:98px;width:98px}.icon-tile .realistic-icon{width:98px;height:98px}}
+@media(min-width:700px) and (max-width:900px){.icon-tile{width:84px;height:84px}.icon-tile .realistic-icon{width:84px;height:84px}}

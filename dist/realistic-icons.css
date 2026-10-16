@@ -1,15 +1,24 @@
-/* Animate activity within the existing artwork, never the icon's position. */
-.icon-tile{height:112px;justify-content:center}
-.icon-tile .realistic-icon{display:block;width:108px;height:108px;max-width:100%;overflow:visible;filter:drop-shadow(0 5px 4px #0c28441a)}
-.art-stream{fill:none;stroke:#c6ffff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:.075 .925;filter:drop-shadow(0 0 3px #00cfff);mix-blend-mode:screen;animation:art-data-flow 2.6s linear infinite;animation-delay:calc(var(--delay,0s) + var(--phase,0s))}
-.art-bubble{fill:#fff3a6;filter:drop-shadow(0 0 2px #ffed55);mix-blend-mode:screen;animation:art-reaction 2.9s linear infinite;animation-delay:calc(var(--delay,0s) + var(--phase,0s))}
-.art-bar{fill:#78ffdf;mix-blend-mode:screen;opacity:.65;transform-box:fill-box;transform-origin:center bottom;animation:art-bar-activity var(--duration,3s) ease-in-out infinite;animation-delay:calc(var(--delay,0s) + var(--phase,0s))}
-.art-scan{fill:none;stroke:#a5ffff;stroke-width:3;filter:drop-shadow(0 0 4px #00d9ff);mix-blend-mode:screen;animation:art-scan-activity 3s ease-in-out infinite}
-.art-core{fill:#fff29a;mix-blend-mode:screen;filter:blur(7px);animation:art-bulb-activity 3s ease-in-out infinite}
-@keyframes art-data-flow{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
-@keyframes art-reaction{0%{transform:translateY(0);opacity:0}20%{opacity:.9}80%{opacity:.65}100%{transform:translateY(-43px);opacity:0}}
-@keyframes art-bar-activity{0%,100%{transform:scaleY(.7);opacity:.25}25%{transform:scaleY(.4);opacity:.6}50%{transform:scaleY(.95);opacity:.8}75%{transform:scaleY(.6);opacity:.4}}
-@keyframes art-scan-activity{0%,100%{transform:translateY(0);opacity:.2}50%{transform:translateY(73px);opacity:.8}}
-@keyframes art-bulb-activity{0%,100%{opacity:.05}45%,60%{opacity:.48}}
-@media(max-width:767px){.icon-tile{height:108px}.icon-tile .realistic-icon{width:96px;height:96px}}
-@media(prefers-reduced-motion:reduce){.realistic-icon *{animation:none!important}.art-effects{display:none}}
+/* Artwork stays still; only subject-specific mechanisms animate. */
+.icon-tile .realistic-icon{display:block;width:108px;height:108px;max-width:100%;overflow:visible;filter:drop-shadow(0 3px 3px #0c28441a)}
+.subject-mechanism{fill:none;stroke:#38d9f5;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.atom-orbit{stroke:var(--tone);stroke-width:2}
+.motion-electron{fill:#fbbf24;stroke:#fff;stroke-width:1;offset-rotate:0deg;animation:electron-orbit 3.6s linear infinite}
+.motion-node{fill:#a5ffff;stroke:none;animation:node-activate 2.4s ease-in-out infinite}
+.motion-track{stroke:#8be6ff;stroke-width:1.5;opacity:.7}
+.motion-rung{stroke:#a78bfa;animation:node-activate 3s ease-in-out infinite}
+.motion-curve{stroke:#fde68a;stroke-dasharray:120;animation:plot-function 4s ease-in-out infinite}
+.motion-bar{fill:#86e5ff;stroke:none;transform-box:fill-box;transform-origin:bottom;animation:chart-update 3s ease-in-out infinite}
+.motion-row{fill:#82f5dc;stroke:none;animation:node-activate 2.8s ease-in-out infinite}
+.motion-focus{stroke:#a4ffff;transform-origin:64px 64px;animation:lens-focus 4s ease-in-out infinite}
+.motion-logic{fill:#bbffbc;stroke:none;animation:logic-switch 2.4s steps(1) infinite}
+.motion-filament{stroke:#fff8a6;stroke-width:4;animation:filament-heat 3s ease-in-out infinite}
+.motion-lock{stroke:#d2faff;animation:lock-close 4s ease-in-out infinite}
+@keyframes electron-orbit{to{offset-distance:100%}}
+@keyframes node-activate{0%,100%{opacity:.2}40%,60%{opacity:1}}
+@keyframes plot-function{0%,10%{stroke-dashoffset:120}65%,85%{stroke-dashoffset:0}100%{stroke-dashoffset:-120}}
+@keyframes chart-update{0%,100%{transform:scaleY(.65)}50%{transform:scaleY(1)}}
+@keyframes lens-focus{0%,100%{transform:scale(.88)}50%{transform:scale(1.08)}}
+@keyframes logic-switch{0%,100%{opacity:.2}50%{opacity:1}}
+@keyframes filament-heat{0%,100%{opacity:.4;filter:none}50%{opacity:1;filter:drop-shadow(0 0 5px #ffc400)}}
+@keyframes lock-close{0%,20%,100%{transform:translateY(-5px)}35%,85%{transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.subject-motion *{animation:none!important}.motion-curve{stroke-dashoffset:0}.motion-electron{offset-distance:25%}}

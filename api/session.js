@@ -59,15 +59,15 @@ module.exports = async function handler(req, res) {
       console.error('Firebase token verification failed', { code: error.code || 'unknown' });
       return res.status(401).json({ error: 'Please sign in again.' });
     }
-    if (!require('../lib/account').validLogin(user)) return res.status(401).json({ error: 'Verify your email and sign in again with Google or email/password.' });
+    if (!require('../lib/account').validLogin(user)) return res.status(401).json({ error: 'Sign in again with a verified Google, email, or phone account.' });
     if (!process.env.DATABASE_URL) return res.status(503).json({ error: 'Profile storage is awaiting server configuration.' });
     stage = 'profile-storage';
     const { neon } = require('@neondatabase/serverless');
     const sql = neon(process.env.DATABASE_URL);
-    await sql`INSERT INTO aimer_users (firebase_uid, email, display_name, photo_url)
-      VALUES (${user.uid}, ${user.email}, ${user.name || null}, ${user.picture || null})
+    await sql`INSERT INTO aimer_users (firebase_uid, email, display_name, photo_url, verified_phone)
+      VALUES (${user.uid}, ${user.email || null}, ${user.name || null}, ${user.picture || null}, ${user.phone_number || null})
       ON CONFLICT (firebase_uid) DO UPDATE SET email = EXCLUDED.email,
-      photo_url = EXCLUDED.photo_url, last_login_at = NOW()`;
+      photo_url = EXCLUDED.photo_url, verified_phone = EXCLUDED.verified_phone, last_login_at = NOW()`;
     stage = 'session-creation';
     const session = await firebaseAuth.createSessionCookie(idToken, { expiresIn });
     res.setHeader('Set-Cookie', cookie(session, expiresIn / 1000, shared));

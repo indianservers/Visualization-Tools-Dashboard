@@ -1,26 +1,31 @@
-/* A single realistic icon; animated highlights stay inside its alpha silhouette. */
+/* Subject-specific mechanisms; no generic moving highlights. */
 (() => {
-  const stream = (d, delay = 0) => `<path class="art-stream" d="${d}" pathLength="1" style="--delay:${delay}s"/>`;
-  const signals = () => [
-    'M24 48L45 35L65 57L86 38L108 51',
-    'M26 80L45 65L66 85L87 64L105 76',
-    'M45 35V65M65 57V85M86 38V64'
-  ].map((d,i)=>stream(d,-i*.8)).join('');
-  const orbit = () => [
-    'M107 64C107 83 21 83 21 64S107 45 107 64',
-    'M88 22C104 31 53 113 39 105S72 14 88 22',
-    'M39 22C54 14 105 97 89 105S23 31 39 22'
-  ].map((d,i)=>stream(d,-i*.7)).join('');
-  const strands = () => stream('M42 18C96 35 32 51 42 64S97 90 42 110') + stream('M86 18C31 35 95 51 86 64S31 90 86 110',-1.4);
-  const reaction = () => [52,65,78].map((x,i)=>`<circle class="art-bubble" cx="${x}" cy="91" r="${2+i%2}" style="--delay:${-i*.9}s"/>`).join('');
-  const chart = () => [35,49,63,77,91].map((x,i)=>`<rect class="art-bar" x="${x}" y="${53-i*5}" width="8" height="${43+i*5}" rx="2" style="--delay:${-i*.61}s;--duration:${2.7+i*.27}s"/>`).join('');
-  const circuits = () => ['M18 40H41V52H64V33H107','M20 82H46V66H80V87H108','M51 17V40H78V108'].map((d,i)=>stream(d,-i*.9)).join('');
-  const scan = () => '<path class="art-scan" d="M20 28H108"/>';
-  const records = () => ['M30 42H98','M30 65H98','M30 87H98'].map((d,i)=>stream(d,-i*.75)).join('');
-  const glow = () => '<ellipse class="art-core" cx="64" cy="64" rx="26" ry="32"/>';
-  window.subjectIcon = s => {
-    const effects = {0:()=>stream('M39 28H91L68 40V103',0),1:orbit,2:strands,3:reaction,4:signals,5:signals,6:circuits,7:signals,8:signals,9:records,10:scan,11:circuits,12:circuits,13:circuits,14:glow,15:signals,16:()=>stream('M43 55H86V93H43Z'),17:chart,18:chart,19:records,20:circuits};
-    const image = `<image href="${s.icon}" x="10" y="10" width="108" height="108"/>`;
-    return `<svg class="realistic-icon" viewBox="0 0 128 128" aria-hidden="true" focusable="false" style="--phase:${-(s.id%7)*.31}s"><defs><mask id="art-mask-${s.id}" maskUnits="userSpaceOnUse" x="0" y="0" width="128" height="128" style="mask-type:alpha">${image}</mask></defs>${image}<g class="art-effects" mask="url(#art-mask-${s.id})">${(effects[s.id]||signals)()}</g></svg>`;
+  const particle = (path, delay=0) => `<circle class="motion-electron" r="3" style="offset-path:path('${path}');animation-delay:${delay}s"/>`;
+  const circuit = path => `<path class="motion-track" d="${path}"/>${particle(path)}`;
+  const atom = () => `<circle cx="64" cy="64" r="10" fill="#f59e0b" stroke="#ffe7a0"/>${[0,60,120].map((angle,i)=>`<g transform="rotate(${angle} 64 64)"><ellipse class="atom-orbit" cx="64" cy="64" rx="47" ry="18"/>${particle('M111 64A47 18 0 1 1 17 64A47 18 0 1 1 111 64',-i*1.1)}</g>`).join('')}`;
+  const bars = () => [35,51,67,83].map((x,i)=>`<rect class="motion-bar" x="${x}" y="${80-i*10}" width="10" height="${22+i*10}" rx="2" style="animation-delay:${-i*.6}s"/>`).join('');
+  const neural = () => [38,64,90].map((y,i)=>`<path class="motion-track" d="M30 64L64 ${y}L98 64"/><circle class="motion-node" cx="64" cy="${y}" r="5" style="animation-delay:${-i*.6}s"/>`).join('');
+  const effects = {
+    0:()=>'<path class="motion-curve" d="M29 88Q54 91 65 63T101 30"/>',
+    1:atom,
+    2:()=>'<path d="M49 24C89 46 39 82 79 104M79 24C39 46 89 82 49 104"/>'+[35,49,64,79,93].map((y,i)=>`<path class="motion-rung" d="M51 ${y}H77" style="animation-delay:${-i*.4}s"/>`).join(''),
+    3:atom,
+    4:neural,
+    5:()=>'<path class="motion-curve" d="M30 92L98 37"/><g fill="#fbbf24"><circle cx="40" cy="78" r="3"/><circle cx="57" cy="70" r="3"/><circle cx="73" cy="48" r="3"/><circle cx="91" cy="42" r="3"/></g>',
+    6:()=>circuit('M22 46H47V64H83V85H107'),
+    7:()=>neural()+particle('M30 64L64 38L98 64'),
+    8:()=>circuit('M28 34H65V64H99M65 64V96H32'),
+    9:()=>[43,64,85].map((y,i)=>`<rect class="motion-row" x="39" y="${y}" width="50" height="7" rx="3" style="animation-delay:${-i*.7}s"/>`).join(''),
+    10:()=>'<g class="motion-focus"><path d="M36 47V36H47M81 36H92V47M92 81V92H81M47 92H36V81"/><circle cx="64" cy="64" r="13"/></g>',
+    11:()=>circuit('M22 42H46V58H80V84H106'),
+    12:()=>'<circle class="motion-logic" cx="31" cy="54" r="4"/><circle class="motion-logic" cx="98" cy="64" r="5" style="animation-delay:1.2s"/>',
+    13:()=>circuit('M28 87V43H56V70H93V37'),
+    14:()=>'<path class="motion-filament" d="M53 62L60 76H68L75 62M60 76V88M68 76V88"/>',
+    15:()=>[47,64,81].map((x,i)=>`<circle class="motion-node" cx="${x}" cy="61" r="4" style="animation-delay:${-i*.3}s"/>`).join(''),
+    16:()=>'<path class="motion-lock" d="M53 65V53A11 11 0 0 1 75 53V65"/>',
+    17:bars,18:bars,
+    19:()=>[45,64,83].map((y,i)=>`<path class="motion-rung" d="M40 ${y}Q64 ${y+10} 88 ${y}" style="animation-delay:${-i*.6}s"/>`).join(''),
+    20:()=>[42,60,78].map((y,i)=>`<rect class="motion-row" x="${34+i*8}" y="${y}" width="${58-i*8}" height="7" rx="3" style="animation-delay:${-i*.7}s"/>`).join('')
   };
+  window.subjectIcon = s => `<svg class="realistic-icon subject-motion" viewBox="0 0 128 128" aria-hidden="true" focusable="false">${[1,3].includes(s.id)?'':`<image href="${s.icon}" x="6" y="6" width="116" height="116"/>`}<g class="subject-mechanism">${effects[s.id]?.()||''}</g></svg>`;
 })();

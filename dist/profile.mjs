@@ -5,7 +5,7 @@ function render(p) {
   accountUid = p.uid;
   $('#display-name').value = p.name || ''; $('#email').value = p.email || ''; photo($('#user-avatar'), p);
   $('#mobile-number').value = p.mobileNumber || '';
-  $('#sign-in-provider').textContent = p.signInMethod === 'password' ? '✓ Connected with email & password' : '✓ Connected with Google';
+  $('#sign-in-provider').textContent = p.signInMethod === 'phone' ? `✓ Connected with phone (${p.verifiedPhone || ''})` : p.signInMethod === 'password' ? '✓ Connected with email & password' : '✓ Connected with Google';
   for (const input of document.querySelectorAll('.interest-options input')) input.checked = p.interests.includes(input.value);
   for (const key of ['favorites', 'pinned', 'recent']) $('#stat-' + key).textContent = p.learning[key].length;
   const date = value => new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(value));

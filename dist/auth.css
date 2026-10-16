@@ -50,3 +50,48 @@ dialog.account-dialog{box-sizing:border-box;width:calc(100% - 32px);max-width:42
 .account-dialog button:disabled{opacity:.6;cursor:wait}
 #email-form input,.onboarding-phone input{font-family:inherit;font-size:14px}
 @media(prefers-reduced-motion:reduce){#email-submit.is-loading:before{animation:none}}
+/* Mobile first sign-in: focused actions on phones, an illustrated story on desktop. */
+#account-dialog{width:calc(100% - 24px);max-width:460px;padding:0;border-radius:24px;background:#fff;max-height:calc(100dvh - 24px);text-align:center;overscroll-behavior:contain}
+#account-dialog .account-close{position:absolute;z-index:3;top:12px;right:12px;width:40px;height:40px}
+.signin-story{display:none}
+.signin-content{padding:44px 22px 22px;min-width:0}
+#account-dialog .account-brand{width:72px;height:72px;margin:0 auto 18px;border-radius:50%;background:radial-gradient(circle,#e7edff,#f6f9ff);color:#4264eb;box-shadow:0 0 0 10px #f8faff}
+#account-dialog .account-brand svg{width:42px;height:42px}
+#account-dialog .account-eyebrow{display:none}
+#account-dialog h2{font-size:30px;line-height:1.13;letter-spacing:-1px;margin:16px 0 12px}
+#account-dialog #account-description{font-size:14px;line-height:1.55;margin:0 auto 24px;max-width:340px}
+#account-dialog .google-login,#account-dialog .email-toggle{min-height:54px;border-radius:15px;padding:13px 16px;font-size:14px}
+#account-dialog .email-toggle{display:flex;align-items:center;gap:14px;background:#f5f8ff;margin-top:12px;text-align:left;color:#2563eb}
+.email-toggle>span:nth-child(2){flex:1}.email-toggle>span:first-child{font-size:25px}.email-toggle>span:last-child{font-size:22px}
+#account-dialog #shared-account{display:flex;align-items:center;gap:12px;text-align:left;background:#f4f7fd;padding:14px;border-radius:15px;margin:24px 0 0;color:#29446c;font-size:12px;line-height:1.5}
+.shared-account-icon{display:grid;place-items:center;flex-shrink:0;width:38px;height:38px;border-radius:12px;background:#e7edff;color:#3464ed;font-size:25px}
+#shared-account strong{display:block;font-weight:600}#shared-account small{display:block;font-size:11px;color:#7083a2;margin-top:3px}
+#account-dialog .account-note{border:0;margin-top:20px;padding-top:0;font-size:11px}
+#account-dialog .account-note svg{width:18px;height:18px}
+#account-dialog .account-privacy{font-size:10px;margin-top:12px;line-height:1.8}
+#account-dialog .account-privacy a{display:inline-block;min-height:32px;padding-top:7px;color:#2563eb}
+#account-dialog #email-form input{font-size:16px;min-height:48px}
+#account-dialog #email-submit{min-height:48px}
+@media(min-width:800px){
+  #account-dialog{width:calc(100% - 64px);max-width:940px;border-radius:30px}
+  #account-dialog[open]{display:grid;grid-template-columns:.86fr 1.14fr}
+  #account-dialog .account-close{top:18px;right:18px;width:42px;height:42px}
+  .signin-story{display:flex;flex-direction:column;position:relative;overflow:hidden;text-align:left;padding:30px 34px 0;background:radial-gradient(ellipse at 10% 0,#d9f2ff,transparent 55%),linear-gradient(145deg,#ecf5ff,#f2efff 60%,#c8e6ff);border-radius:29px 0 0 29px}
+  .signin-logo{display:flex;align-items:center;gap:10px;color:#142f53}.signin-logo strong{display:block;font-size:25px;letter-spacing:1px;line-height:1}.signin-logo span{font-size:14px;letter-spacing:3px}
+  .signin-tagline{font-size:11px!important;color:#617d9e!important;margin:10px 0 28px!important;white-space:nowrap}
+  .signin-story h3{font-size:43px;line-height:1.06;letter-spacing:-1.7px;margin:0;color:#102a50}.signin-story h3>span{color:#3367ff}
+  .signin-summary{font-size:14px!important;line-height:1.5!important;color:#597395!important;margin:18px 0!important;max-width:270px}
+  .signin-benefits{display:grid;gap:9px;list-style:none;margin:0;padding:0}.signin-benefits li{display:flex;align-items:center;gap:13px}.signin-benefits li>span{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#e5d8ff;color:#955cf3;font-size:25px}.signin-benefits li:nth-child(2)>span{background:#ccfaeb;color:#08b88d}.signin-benefits li:nth-child(3)>span{background:#fff0c4;color:#e5a000}.signin-benefits li:nth-child(4)>span{background:#ffdfdf;color:#f16e78}.signin-benefits b{display:block;font-size:14px}.signin-benefits small{display:block;color:#6880a1;font-size:11px;margin-top:2px}
+  .signin-handwriting{font-family:cursive;font-style:italic;font-size:18px!important;color:#4267ce!important;margin:18px 0 0!important;transform:rotate(-5deg)}
+  .signin-mascot{display:block;object-fit:contain;width:210px;height:210px;align-self:center;margin-top:auto}
+  .signin-content{padding:58px 36px 28px;align-self:center}
+  #account-dialog .account-brand{width:92px;height:92px;margin-bottom:26px}
+  #account-dialog .account-brand svg{width:55px;height:55px}
+  #account-dialog h2{font-size:36px}
+  #account-dialog #account-description{font-size:15px;margin-bottom:28px}
+  #account-dialog .google-login,#account-dialog .email-toggle{min-height:60px;font-size:16px}
+  #account-dialog .account-note{margin-top:30px}
+}
+@media(max-width:359px){.signin-content{padding:42px 16px 18px}#account-dialog h2{font-size:27px}#account-dialog #shared-account{padding:11px;font-size:11px}}
+@media(max-height:650px){#account-dialog .signin-content{padding-top:40px}#account-dialog .account-brand{width:52px;height:52px;margin-bottom:12px}#account-dialog h2{font-size:27px}#account-dialog #account-description{margin-bottom:16px}.signin-story .signin-mascot{width:150px;height:150px}}
+.phone-auth{text-align:left;margin-top:18px}.phone-auth label{display:block;font-size:13px;font-weight:600;margin:12px 0 8px;color:#274464}.phone-auth input{box-sizing:border-box;width:100%;min-height:50px;padding:12px;border:1px solid #cedcf0;border-radius:10px;background:#fff;color:#16345e;font-family:inherit;font-size:16px}.phone-auth .phone-consent{font-size:11px;line-height:1.6;color:#70819c;margin:12px 0}.phone-auth #phone-code-hint{font-size:13px;color:#617394}.phone-auth button[type=submit]{width:100%;min-height:48px;background:#2563eb;color:white;border:0;border-radius:12px;margin-top:14px;font-size:14px;font-weight:600}.phone-auth #phone-resend,.phone-auth #phone-change{min-height:44px;padding:10px;background:transparent;border:0;color:#2563eb;font-size:12px}#phone-recaptcha{max-width:100%;overflow-x:auto;margin-top:12px}#phone-code{letter-spacing:6px;font-size:22px;text-align:center}

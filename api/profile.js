@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
     if (!row) return res.status(404).json({ error: 'Profile not found. Please sign out and sign in again.' });
     return res.status(200).json({ profile: {
       uid: row.firebase_uid, email: row.email, name: row.display_name, picture: row.photo_url,
-      mobileNumber: row.mobile_number || null, mobileVerified: false, signInMethod: user.firebase?.sign_in_provider || null,
+      mobileNumber: row.mobile_number || null, mobileVerified: false, verifiedPhone: user.phone_number || null, signInMethod: user.firebase?.sign_in_provider || null,
       createdAt: row.created_at, lastLoginAt: row.last_login_at, interests: row.interests,
       onboardingComplete: row.onboarding_complete, learning: row.learning, version: row.learning_version
     } });
