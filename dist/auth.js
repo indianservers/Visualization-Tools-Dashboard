@@ -101,6 +101,10 @@ async function refresh() {
   catch (error) { render(null); status.textContent = error.message; document.querySelector('#auth-retry').hidden = false; }
 }
 document.querySelector('#auth-retry').addEventListener('click', () => currentUser ? refresh() : button.click());
+window.addEventListener('aimer-session-expired', () => {
+  render(null); status.textContent = 'Your session expired. Sign in again to sync your learning space.';
+  document.querySelector('#account-trigger').click();
+});
 const onboarding = document.querySelector('#onboarding-dialog');
 window.addEventListener('aimer-onboarding', () => { if (!onboarding.open && !busy) onboarding.showModal(); else if (busy) setTimeout(() => { if (currentUser && !onboarding.open) onboarding.showModal(); }, 250); });
 async function finishOnboarding(skip) {

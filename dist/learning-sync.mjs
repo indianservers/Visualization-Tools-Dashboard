@@ -44,7 +44,7 @@ async function load(user) {
     window.dispatchEvent(new CustomEvent('aimer-profile', { detail: profile }));
     if (unsynced) { dirty = true; await save(); }
     if (!profile.onboardingComplete) window.dispatchEvent(new CustomEvent('aimer-onboarding', { detail: profile }));
-  } catch (error) { if (current === generation) { label(error.message); retry.hidden = false; } }
+  } catch (error) { if (current === generation) { label(error.message); retry.hidden = false; if (error.status === 401) window.dispatchEvent(new Event('aimer-session-expired')); } }
 }
 async function save() {
   if (!ready || !uid || saving || !dirty) return;
@@ -65,9 +65,9 @@ async function save() {
     if (!dirty) {
       bridge.apply(base);
       try { localStorage.removeItem('aimers-cloud-pending-' + uid); } catch {}
-    } else keepPending();
+    } else { bridge.apply(mergeLearning(snapshot, bridge.snapshot(), base)); keepPending(); }
     label('Synced to your account'); retry.hidden = true; personalized(profile);
-  } catch (error) { if (current === generation) { dirty = true; label('Not synced. Your changes are kept on this device.'); retry.hidden = false; } }
+  } catch (error) { if (current === generation) { dirty = true; label('Not synced. Your changes are kept on this device.'); retry.hidden = false; if (error.status === 401) window.dispatchEvent(new Event('aimer-session-expired')); } }
   finally { saving = false; if (dirty && retry.hidden) timer = setTimeout(save, 300); }
 }
 window.addEventListener('aimer-account', e => load(e.detail));

@@ -24,7 +24,7 @@ $('#profile-form').addEventListener('submit', async e => {
   try {
     render(await updateProfile({ displayName: $('#display-name').value, interests: [...document.querySelectorAll('.interest-options input:checked')].map(x => x.value), onboardingComplete: true }, accountUid));
     $('#profile-status').textContent = 'Your profile is up to date.';
-  } catch (error) { $('#profile-status').textContent = error.message; if (error.status === 401) $('#profile-content').hidden = true; }
+  } catch (error) { $('#profile-status').textContent = error.message; if (error.status === 401) location.replace('/?returnTo=%2Fprofile&login=1'); }
   finally { $('#save-profile').disabled = false; }
 });
 $('#profile-signout').addEventListener('click', async () => {
